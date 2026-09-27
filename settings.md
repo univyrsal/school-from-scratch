@@ -59,13 +59,10 @@ Seats: {count}
 
 Reply to this message to answer them directly.`
 
-RSVP_EMAIL_TO_THEM_SUBJECT = "Your RSVP for {show}"
-RSVP_EMAIL_TO_THEM_BODY = `Thank you — your RSVP is in.
+RSVP_EMAIL_TO_THEM_SUBJECT = "Your RSVP for '{show}'"
+RSVP_EMAIL_TO_THEM_BODY = `Your RSVP is in. Thank you!
 
 We have put you down for {seats} at {show}.
-
-We will write again with the details closer to the day. If your plans
-change, just reply to this message and let us know.
 
 The School From Scratch`
 ```

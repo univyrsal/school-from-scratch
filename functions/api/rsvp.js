@@ -19,14 +19,16 @@
 
 const MOST_SEATS = 10;
 
-// ---- What the two emails say ------------------------------------------------
-// Edit these freely: this is the wording, and nothing below needs touching.
-// An empty line starts a new paragraph. These stand in for the details:
+// ---- The bare wording, for when settings.md can't be read -------------------
 //
-//   {show}   the show's name (RSVP_SHOW)
-//   {seats}  "1 seat" or "3 seats", worded to suit
-//   {count}  just the number
-//   {email}  the address the person gave
+// THIS IS NOT THE WORDING OF THE EMAILS. That is in settings.md, under
+// "The RSVP emails", and that is the one to edit.
+//
+// What's below is the little that gets said if settings.md can't be
+// fetched at all — a deploy half done, the site briefly down. It is kept
+// short and plain on purpose: it carries the facts and promises nothing,
+// so it can't quietly send something out of date that reads as though it
+// were meant. If you see an email this bare, the file didn't load.
 //
 const WORDS = {
   // To whoever is running the show.
@@ -35,21 +37,14 @@ const WORDS = {
     body: `A new RSVP for {show}.
 
 Email: {email}
-Seats: {count}
-
-Reply to this message to answer them directly.`,
+Seats: {count}`,
   },
   // Back to the person who wrote in.
   toThem: {
     subject: 'Your RSVP for {show}',
     body: `Thank you — your RSVP is in.
 
-We have put you down for {seats} at {show}.
-
-We will write again with the details closer to the day. If your plans
-change, just reply to this message and let us know.
-
-The School From Scratch`,
+We have put you down for {seats} at {show}.`,
   },
 };
 

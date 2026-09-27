@@ -44,17 +44,27 @@ These stand in for the details, and are filled in when the email is sent:
 
 - `{show}` — the show's name
 - `{date}` — when it is, written out below
+- `{place}` — where it is, written out below
 - `{seats}` — "1 seat" or "3 seats", worded to suit
 - `{count}` — just the number
 - `{email}` — the address the person gave
 
-When the show is, in whatever words suit — this is written out as it is,
-not worked out from a calendar, so "Saturday, October 4th at 2pm" reads
-better than a date on its own. Anywhere `{date}` appears in the wording
-below, this goes.
+**To use one, type it into the wording below, curly brackets and all.** The
+email that goes out has the real thing in its place, so
+
+`We have put you down for {seats} on {date}.`
+
+arrives as "We have put you down for 3 seats on October 4th at 2pm." A
+name that isn't in the list above is left alone, brackets and all, so a
+misspelt one shows up in the email itself.
+
+When and where the show is, in whatever words suit. These are written out
+as they are, not worked out from a calendar or a map, so "Saturday, October
+4th at 2pm" reads better than a date on its own.
 
 ```js
 RSVP_EMAIL_DATE = "October 4th at 2pm"
+RSVP_EMAIL_PLACE = "The Ojai Retreat"
 ```
 
 Write the wording between the slanted quote marks (`` ` ``), as ordinary
@@ -74,7 +84,10 @@ RSVP_EMAIL_TO_THEM_BODY = `Your RSVP is in. Thank you!
 
 We have put you down for {seats} at {show}.
 
-The School From Scratch`
+When: {date}
+Where: {place}
+
+We hope to see you at the show!`
 ```
 
 The font and the size of the writing, in pixels. An email program uses a
@@ -116,8 +129,8 @@ programs ignore see-through and would show the small print as loud as
 everything else.
 
 ```js
-RSVP_EMAIL_FOOTER = ""
-RSVP_EMAIL_FOOTER_TEXT_SIZE = 13
+RSVP_EMAIL_FOOTER = "The School From Scratch; The Transformative Education Center is a 501 (c) (3) non-profit organization."
+RSVP_EMAIL_FOOTER_TEXT_SIZE = 12
 RSVP_EMAIL_FOOTER_OPACITY = 0.55
 ```
 

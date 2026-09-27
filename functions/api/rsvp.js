@@ -221,6 +221,7 @@ export async function onRequestPost({ request, env }) {
     count: String(seats),
     email,
     date: words('RSVP_EMAIL_DATE', ''),
+    place: words('RSVP_EMAIL_PLACE', ''),
   };
   const fill = (text) => String(text).replace(/\{(\w+)\}/g, (all, name) =>
     (Object.prototype.hasOwnProperty.call(details, name) ? details[name] : all));

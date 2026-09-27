@@ -64,7 +64,7 @@ as they are, not worked out from a calendar or a map, so "Saturday, October
 
 ```js
 RSVP_EMAIL_DATE = "October 4th at 2pm"
-RSVP_EMAIL_PLACE = "The Ojai Retreat"
+RSVP_EMAIL_PLACE = "The Ojai Retreat & Inn (160 Besant Rd, Ojai, CA 93023)"
 ```
 
 Write the wording between the slanted quote marks (`` ` ``), as ordinary
@@ -128,6 +128,8 @@ It's worked out as a color rather than left see-through, because some email
 programs ignore see-through and would show the small print as loud as
 everything else.
 
+// --Maxwell // Add this back to RSVP_EMAIL_IMAGE if you want assets/person_icon_high_quality.png
+
 ```js
 RSVP_EMAIL_FOOTER = "The School From Scratch; The Transformative Education Center is a 501 (c) (3) non-profit organization."
 RSVP_EMAIL_FOOTER_TEXT_SIZE = 12
@@ -135,7 +137,7 @@ RSVP_EMAIL_FOOTER_OPACITY = 0.55
 ```
 
 ```js
-RSVP_EMAIL_IMAGE = "assets/person_icon_high_quality.png"
+RSVP_EMAIL_IMAGE = ""
 RSVP_EMAIL_IMAGE_WIDTH = 140
 ```
 

@@ -74,19 +74,26 @@ names to try, ending in something every machine has — `serif` or
 
 ```js
 RSVP_EMAIL_FONT = "Georgia, 'Times New Roman', serif"
-RSVP_EMAIL_TEXT_SIZE = 16
+RSVP_EMAIL_TEXT_SIZE = 18
 ```
 
-A picture under the words, named as a file in this site's own folders, and
-how wide it is in pixels. Leave it empty ("") for none. It is sent as a link
-back to the site, so the file has to be one the site actually has — and some
-email programs don't show pictures until the reader asks them to, so nothing
-important should live only in it.
+A picture under the words, and how wide it is in pixels. Leave it empty ("")
+for none.
+
+Write the whole path from the top of the site, folder and all, exactly as
+the file is named: `"assets/wooden_airplane.jpg"`, not `"wooden_airplane"`.
+It is sent as a link back to the site, so anything that isn't the real path
+is simply a broken picture in the email, and nothing here will say so.
+
+Some email programs don't show pictures until the reader asks them to, so
+nothing important should live only in the picture.
 
 ```js
-RSVP_EMAIL_IMAGE = ""
-RSVP_EMAIL_IMAGE_WIDTH = 220
+RSVP_EMAIL_IMAGE = "assets/person_icon_high_quality.png"
+RSVP_EMAIL_IMAGE_WIDTH = 100
 ```
+
+### Scrolling
 
 Whether the browser's scrollbar shows down the side of the window, on every
 page of the site. `false` hides it; the page still scrolls exactly as it

@@ -19,6 +19,40 @@
 
 const MOST_SEATS = 10;
 
+// ---- What the two emails say ------------------------------------------------
+// Edit these freely: this is the wording, and nothing below needs touching.
+// An empty line starts a new paragraph. These stand in for the details:
+//
+//   {show}   the show's name (RSVP_SHOW)
+//   {seats}  "1 seat" or "3 seats", worded to suit
+//   {count}  just the number
+//   {email}  the address the person gave
+//
+const WORDS = {
+  // To whoever is running the show.
+  toYou: {
+    subject: 'RSVP: {seats} for {show}',
+    body: `A new RSVP for {show}.
+
+Email: {email}
+Seats: {count}
+
+Reply to this message to answer them directly.`,
+  },
+  // Back to the person who wrote in.
+  toThem: {
+    subject: 'Your RSVP for {show}',
+    body: `Thank you — your RSVP is in.
+
+We have put you down for {seats} at {show}.
+
+We will write again with the details closer to the day. If your plans
+change, just reply to this message and let us know.
+
+The School From Scratch`,
+  },
+};
+
 // The box is shown in a frame of its own with no origin of its own, so its
 // requests arrive marked "null". This is a public form that carries no
 // cookies and no sign-in, so it answers to anyone; there is nothing here
@@ -92,8 +126,25 @@ export async function onRequestPost({ request, env }) {
 
   const show = String(env.RSVP_SHOW || 'Is Nirmal Normal?');
   const people = seats === 1 ? '1 seat' : seats + ' seats';
-  const safeShow = escapeHtml(show);
-  const safeEmail = escapeHtml(email);
+
+  // The wording above, with the details filled in. It is written once, as
+  // words, and the tidier version email programs prefer is made from it, so
+  // there is only ever one copy to keep up to date.
+  const details = { show, seats: people, count: String(seats), email };
+  const fill = (words) => String(words).replace(/\{(\w+)\}/g, (all, name) =>
+    (Object.prototype.hasOwnProperty.call(details, name) ? details[name] : all));
+  const asParagraphs = (words) => escapeHtml(words).split(/\n\s*\n/)
+    .map((block) => '<p>' + block.trim().split('\n').join('<br>') + '</p>').join('');
+  const letter = (which) => ({
+    subject: fill(which.subject),
+    text: fill(which.body),
+    html: asParagraphs(fill(which.body)),
+  });
+
+  // Replies to the note sent back to the person have to land somewhere a
+  // person reads. RSVP_FROM is only a name on an envelope — there is no
+  // mailbox behind it — so they are pointed at whoever is running the show.
+  const runningTheShow = env.RSVP_ADMIN_EMAIL.split(',').map((one) => one.trim()).filter(Boolean);
 
   // The two letters are not equal. The one to whoever is running the show
   // carries the RSVP itself: if it doesn't go, the RSVP is lost and the
@@ -107,17 +158,9 @@ export async function onRequestPost({ request, env }) {
     // person who wrote in.
     await send(env.RESEND_API_KEY, {
       from: env.RSVP_FROM,
-      to: env.RSVP_ADMIN_EMAIL.split(',').map((one) => one.trim()).filter(Boolean),
+      to: runningTheShow,
       reply_to: email,
-      subject: 'RSVP: ' + people + ' for ' + show,
-      text: 'A new RSVP for ' + show + '.\n\n'
-        + 'Email: ' + email + '\n'
-        + 'Seats: ' + seats + '\n\n'
-        + 'Reply to this message to answer them directly.',
-      html: '<p>A new RSVP for <strong>' + safeShow + '</strong>.</p>'
-        + '<p>Email: <a href="mailto:' + safeEmail + '">' + safeEmail + '</a><br>'
-        + 'Seats: <strong>' + seats + '</strong></p>'
-        + '<p>Reply to this message to answer them directly.</p>',
+      ...letter(WORDS.toYou),
     });
   } catch (err) {
     console.error('RSVP could not be sent:', err && err.message);
@@ -131,17 +174,8 @@ export async function onRequestPost({ request, env }) {
     await send(env.RESEND_API_KEY, {
       from: env.RSVP_FROM,
       to: [email],
-      subject: 'Your RSVP for ' + show,
-      text: 'Thank you — your RSVP is in.\n\n'
-        + 'We have put you down for ' + people + ' at ' + show + '.\n\n'
-        + 'We will write again with the details closer to the day. If your '
-        + 'plans change, just reply to this message and let us know.\n\n'
-        + 'The School From Scratch',
-      html: '<p>Thank you — your RSVP is in.</p>'
-        + '<p>We have put you down for <strong>' + people + '</strong> at <strong>' + safeShow + '</strong>.</p>'
-        + '<p>We will write again with the details closer to the day. If your plans change, '
-        + 'just reply to this message and let us know.</p>'
-        + '<p>The School From Scratch</p>',
+      reply_to: runningTheShow, // not RSVP_FROM: nobody reads that address
+      ...letter(WORDS.toThem),
     });
   } catch (err) {
     // The RSVP arrived; only the courtesy didn't. Worth knowing about, not

@@ -64,7 +64,7 @@ It's written like the section files, so the wording is yours to shape:
 *italic*, **bold**, ***both***. Its size is in pixels, and so is how far
 above the bottom of the page it sits.
 
-// Maxwell // I removed the quote but if anyone wants to add it back this is the one I chose: '*There is no end to education. It isn’t that you read a book and pass an examination, and then finish with education. You think you have finished with it. You have not. The whole of life—from now, from the moment you are born till the moment you die, it’s a process of learning.*' —Jiddu Krishnamurti, Rishi Valley, 1 February 1966
+// --Maxwell // I removed the quote but if anyone wants to add it back this is the one I chose: '*There is no end to education. It isn’t that you read a book and pass an examination, and then finish with education. You think you have finished with it. You have not. The whole of life—from now, from the moment you are born till the moment you die, it’s a process of learning.*' —Jiddu Krishnamurti, Rishi Valley, 1 February 1966
 
 ```js
 END_QUOTE = ""

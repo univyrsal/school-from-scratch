@@ -182,33 +182,67 @@ export async function onRequestPost({ request, env }) {
   // from this site and can't follow a path of its own.
   const pictureFile = words('RSVP_EMAIL_IMAGE', '');
   const pictureWide = number('RSVP_EMAIL_IMAGE_WIDTH', 220);
+  const pictureSide = words('RSVP_EMAIL_IMAGE_ALIGN', 'left').toLowerCase();
+  const pictureMargin = pictureSide === 'center' || pictureSide === 'centre' ? '28px auto 0'
+    : pictureSide === 'right' ? '28px 0 0 auto' : '28px auto 0 0';
   let picture = '';
   if (pictureFile) {
     try {
       const at = new URL(pictureFile, new URL('/', request.url)).toString();
       picture = '<img src="' + escapeHtml(at) + '" width="' + pictureWide + '" alt=""'
-        + ' style="display:block;margin:28px auto 0;max-width:100%;height:auto;border:0">';
+        + ' style="display:block;margin:' + pictureMargin + ';max-width:100%;height:auto;border:0">';
     } catch (err) {
       console.error('RSVP: RSVP_EMAIL_IMAGE is not a file this site has:', pictureFile);
     }
   }
 
+  // The small print at the end. Faded rather than see-through: an email
+  // program may ignore see-through altogether, and the words would then be
+  // as loud as the rest. Fading works it out as a color instead — the text
+  // mixed with the paper behind it — which every email program understands.
+  const smallPrint = words('RSVP_EMAIL_FOOTER', '');
+  const smallSize = number('RSVP_EMAIL_FOOTER_TEXT_SIZE', 13);
+  const smallStrength = Math.min(1, Math.max(0.05,
+    typeof said.RSVP_EMAIL_FOOTER_OPACITY === 'number' ? said.RSVP_EMAIL_FOOTER_OPACITY : 0.55));
+  const faded = (hex, strength) => {
+    const ink = [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+    const mixed = ink.map((one) => Math.round(one * strength + 255 * (1 - strength)));
+    return '#' + mixed.map((one) => one.toString(16).padStart(2, '0')).join('');
+  };
+  const smallColor = faded('#0b1105', smallStrength);
+  const smallLine = faded('#0b1105', Math.min(1, smallStrength * 0.45));
+
   // The wording, with the details filled in. It is written once, as words,
   // and the tidier version email programs prefer is made from it, so there
   // is only ever one copy to keep up to date.
-  const details = { show, seats: people, count: String(seats), email };
+  const details = {
+    show,
+    seats: people,
+    count: String(seats),
+    email,
+    date: words('RSVP_EMAIL_DATE', ''),
+  };
   const fill = (text) => String(text).replace(/\{(\w+)\}/g, (all, name) =>
     (Object.prototype.hasOwnProperty.call(details, name) ? details[name] : all));
   const asParagraphs = (text) => escapeHtml(text).split(/\n\s*\n/)
     .map((block) => '<p style="margin:0 0 1em">' + block.trim().split('\n').join('<br>') + '</p>').join('');
+  const footerHtml = smallPrint
+    ? '<div style="margin-top:28px;padding-top:14px;border-top:1px solid ' + smallLine
+      + ';font-size:' + smallSize + 'px;line-height:1.5;color:' + smallColor + '">'
+      + escapeHtml(fill(smallPrint)).split(/\n\s*\n/)
+        .map((block) => '<p style="margin:0 0 0.6em">' + block.trim().split('\n').join('<br>') + '</p>')
+        .join('') + '</div>'
+    : '';
+
   const letter = (which, subjectName, bodyName) => {
     const subject = fill(words(subjectName, which.subject));
     const body = fill(words(bodyName, which.body));
     return {
       subject,
-      text: body,
+      // Plain words for anyone whose email program shows no styling at all.
+      text: body + (smallPrint ? '\n\n---\n' + fill(smallPrint) : ''),
       html: '<div style="font-family:' + escapeHtml(font) + ';font-size:' + size
-        + 'px;line-height:1.5;color:#0b1105">' + asParagraphs(body) + picture + '</div>',
+        + 'px;line-height:1.5;color:#0b1105">' + asParagraphs(body) + picture + footerHtml + '</div>',
     };
   };
 

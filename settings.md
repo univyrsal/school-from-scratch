@@ -43,9 +43,19 @@ them must not sit in a file anyone can read.)
 These stand in for the details, and are filled in when the email is sent:
 
 - `{show}` — the show's name
+- `{date}` — when it is, written out below
 - `{seats}` — "1 seat" or "3 seats", worded to suit
 - `{count}` — just the number
 - `{email}` — the address the person gave
+
+When the show is, in whatever words suit — this is written out as it is,
+not worked out from a calendar, so "Saturday, October 4th at 2pm" reads
+better than a date on its own. Anywhere `{date}` appears in the wording
+below, this goes.
+
+```js
+RSVP_EMAIL_DATE = "October 4th at 2pm"
+```
 
 Write the wording between the slanted quote marks (`` ` ``), as ordinary
 text. An empty line starts a new paragraph.
@@ -87,6 +97,29 @@ is simply a broken picture in the email, and nothing here will say so.
 
 Some email programs don't show pictures until the reader asks them to, so
 nothing important should live only in the picture.
+
+Which side it sits on: `"left"`, `"center"` or `"right"`.
+
+```js
+RSVP_EMAIL_IMAGE_ALIGN = "left"
+```
+
+Small print at the very end of both emails, under a faint line — the
+address of the venue, what to do if plans change, anything that shouldn't
+take up as much room as the rest. Leave it empty ("") for none. `{date}`
+and the others work here too.
+
+`RSVP_EMAIL_FOOTER_OPACITY` is how strong the writing is, from 0 to 1: 1 is
+as dark as the rest of the email, 0.55 is a soft grey, 0.3 is very faint.
+It's worked out as a color rather than left see-through, because some email
+programs ignore see-through and would show the small print as loud as
+everything else.
+
+```js
+RSVP_EMAIL_FOOTER = ""
+RSVP_EMAIL_FOOTER_TEXT_SIZE = 13
+RSVP_EMAIL_FOOTER_OPACITY = 0.55
+```
 
 ```js
 RSVP_EMAIL_IMAGE = "assets/person_icon_high_quality.png"

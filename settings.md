@@ -90,7 +90,7 @@ nothing important should live only in the picture.
 
 ```js
 RSVP_EMAIL_IMAGE = "assets/person_icon_high_quality.png"
-RSVP_EMAIL_IMAGE_WIDTH = 100
+RSVP_EMAIL_IMAGE_WIDTH = 140
 ```
 
 ### Scrolling

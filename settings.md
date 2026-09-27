@@ -32,6 +32,65 @@ How visitors move around the photo landscape:
 GALLERY_MODE = "read"
 ```
 
+## The RSVP emails
+
+When someone RSVPs on the play's page, two emails go out: one to whoever is
+running the show, and one back to the person who wrote in. This is what they
+say and how they look. (Who they go to, and the address they come from, are
+set in the Cloudflare dashboard rather than here, because the key that sends
+them must not sit in a file anyone can read.)
+
+These stand in for the details, and are filled in when the email is sent:
+
+- `{show}` — the show's name
+- `{seats}` — "1 seat" or "3 seats", worded to suit
+- `{count}` — just the number
+- `{email}` — the address the person gave
+
+Write the wording between the slanted quote marks (`` ` ``), as ordinary
+text. An empty line starts a new paragraph.
+
+```js
+RSVP_EMAIL_TO_YOU_SUBJECT = "RSVP: {seats} for {show}"
+RSVP_EMAIL_TO_YOU_BODY = `A new RSVP for {show}.
+
+Email: {email}
+Seats: {count}
+
+Reply to this message to answer them directly.`
+
+RSVP_EMAIL_TO_THEM_SUBJECT = "Your RSVP for {show}"
+RSVP_EMAIL_TO_THEM_BODY = `Thank you — your RSVP is in.
+
+We have put you down for {seats} at {show}.
+
+We will write again with the details closer to the day. If your plans
+change, just reply to this message and let us know.
+
+The School From Scratch`
+```
+
+The font and the size of the writing, in pixels. An email program uses a
+font the reader already has rather than fetching one, so this is a list of
+names to try, ending in something every machine has — `serif` or
+`sans-serif`. A font from Google Fonts will not arrive in an email.
+
+```js
+RSVP_EMAIL_FONT = "Georgia, 'Times New Roman', serif"
+RSVP_EMAIL_TEXT_SIZE = 16
+```
+
+A picture under the words, named as a file in this site's own folders, and
+how wide it is in pixels. Leave it empty ("") for none. It is sent as a link
+back to the site, so the file has to be one the site actually has — and some
+email programs don't show pictures until the reader asks them to, so nothing
+important should live only in it.
+
+```js
+RSVP_EMAIL_IMAGE = ""
+RSVP_EMAIL_IMAGE_WIDTH = 220
+```
+
 Whether the browser's scrollbar shows down the side of the window, on every
 page of the site. `false` hides it; the page still scrolls exactly as it
 did, by wheel, trackpad, arrow keys, Page Down, Home and End, and by swiping

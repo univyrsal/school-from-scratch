@@ -78,6 +78,49 @@ const escapeHtml = (text) => String(text)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+// ---- Reading settings.md ----------------------------------------------------
+// The wording and the look of the emails live in settings.md with everything
+// else, so there is one place to change them. This runs on a server rather
+// than in anyone's browser, so it fetches that file from the site itself.
+//
+// The browser runs the grey code blocks; here they are read rather than run —
+// Cloudflare doesn't allow running code that arrives as text, and it would be
+// a poor idea even if it did. Only plain values are understood: words in
+// quotes (of any of the three kinds, so wording can run over several lines),
+// numbers, and true or false. Anything else in the file is passed over.
+function readPlainSettings(text) {
+  const blocks = text.match(/```js\s*[\s\S]*?```/g) || [];
+  const source = blocks.join('\n');
+  const found = {};
+  const line = /^[ \t]*([A-Z][A-Z0-9_]*)[ \t]*=[ \t]*(`(?:[^`\\]|\\[\s\S])*`|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|true|false|-?\d+(?:\.\d+)?)/gm;
+  let m;
+  while ((m = line.exec(source))) {
+    const raw = m[2];
+    let value;
+    if (raw === 'true' || raw === 'false') value = raw === 'true';
+    else if (/^-?[\d.]/.test(raw)) value = Number(raw);
+    else value = raw.slice(1, -1).replace(/\\([\s\S])/g, (all, ch) =>
+      ch === 'n' ? '\n' : ch === 't' ? '\t' : ch);
+    found[m[1]] = value;
+  }
+  return found;
+}
+
+async function settingsFor(request) {
+  try {
+    const where = new URL('/settings.md', request.url).toString();
+    // Kept for a few minutes so a run of RSVPs doesn't fetch it each time.
+    const answer = await fetch(where, { cf: { cacheTtl: 300, cacheEverything: true } });
+    if (!answer.ok) throw new Error('HTTP ' + answer.status);
+    return readPlainSettings(await answer.text());
+  } catch (err) {
+    // The words below are built in, so a missing or unreadable file means
+    // plainer emails rather than no emails.
+    console.error('RSVP: settings.md could not be read, using the built-in wording:', err && err.message);
+    return {};
+  }
+}
+
 async function send(key, mail) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -127,19 +170,52 @@ export async function onRequestPost({ request, env }) {
   const show = String(env.RSVP_SHOW || 'Is Nirmal Normal?');
   const people = seats === 1 ? '1 seat' : seats + ' seats';
 
-  // The wording above, with the details filled in. It is written once, as
-  // words, and the tidier version email programs prefer is made from it, so
-  // there is only ever one copy to keep up to date.
+  // What settings.md says, falling back to the wording built in above.
+  const said = await settingsFor(request);
+  const words = (name, ifNotSaid) =>
+    (typeof said[name] === 'string' && said[name].trim() ? said[name] : ifNotSaid);
+  const number = (name, ifNotSaid) =>
+    (typeof said[name] === 'number' && said[name] > 0 ? said[name] : ifNotSaid);
+
+  // How the emails look. A font has to be one the person reading already
+  // has — email programs don't fetch fonts — so this is a list of names to
+  // try, ending in something every machine has.
+  const font = words('RSVP_EMAIL_FONT', "Georgia, 'Times New Roman', serif");
+  const size = number('RSVP_EMAIL_TEXT_SIZE', 16);
+  // A picture under the words. Written as a file in the site's own folders,
+  // and turned into a full web address, since an email is read far away
+  // from this site and can't follow a path of its own.
+  const pictureFile = words('RSVP_EMAIL_IMAGE', '');
+  const pictureWide = number('RSVP_EMAIL_IMAGE_WIDTH', 220);
+  let picture = '';
+  if (pictureFile) {
+    try {
+      const at = new URL(pictureFile, new URL('/', request.url)).toString();
+      picture = '<img src="' + escapeHtml(at) + '" width="' + pictureWide + '" alt=""'
+        + ' style="display:block;margin:28px auto 0;max-width:100%;height:auto;border:0">';
+    } catch (err) {
+      console.error('RSVP: RSVP_EMAIL_IMAGE is not a file this site has:', pictureFile);
+    }
+  }
+
+  // The wording, with the details filled in. It is written once, as words,
+  // and the tidier version email programs prefer is made from it, so there
+  // is only ever one copy to keep up to date.
   const details = { show, seats: people, count: String(seats), email };
-  const fill = (words) => String(words).replace(/\{(\w+)\}/g, (all, name) =>
+  const fill = (text) => String(text).replace(/\{(\w+)\}/g, (all, name) =>
     (Object.prototype.hasOwnProperty.call(details, name) ? details[name] : all));
-  const asParagraphs = (words) => escapeHtml(words).split(/\n\s*\n/)
-    .map((block) => '<p>' + block.trim().split('\n').join('<br>') + '</p>').join('');
-  const letter = (which) => ({
-    subject: fill(which.subject),
-    text: fill(which.body),
-    html: asParagraphs(fill(which.body)),
-  });
+  const asParagraphs = (text) => escapeHtml(text).split(/\n\s*\n/)
+    .map((block) => '<p style="margin:0 0 1em">' + block.trim().split('\n').join('<br>') + '</p>').join('');
+  const letter = (which, subjectName, bodyName) => {
+    const subject = fill(words(subjectName, which.subject));
+    const body = fill(words(bodyName, which.body));
+    return {
+      subject,
+      text: body,
+      html: '<div style="font-family:' + escapeHtml(font) + ';font-size:' + size
+        + 'px;line-height:1.5;color:#0b1105">' + asParagraphs(body) + picture + '</div>',
+    };
+  };
 
   // Replies to the note sent back to the person have to land somewhere a
   // person reads. RSVP_FROM is only a name on an envelope — there is no
@@ -160,7 +236,7 @@ export async function onRequestPost({ request, env }) {
       from: env.RSVP_FROM,
       to: runningTheShow,
       reply_to: email,
-      ...letter(WORDS.toYou),
+      ...letter(WORDS.toYou, 'RSVP_EMAIL_TO_YOU_SUBJECT', 'RSVP_EMAIL_TO_YOU_BODY'),
     });
   } catch (err) {
     console.error('RSVP could not be sent:', err && err.message);
@@ -175,7 +251,7 @@ export async function onRequestPost({ request, env }) {
       from: env.RSVP_FROM,
       to: [email],
       reply_to: runningTheShow, // not RSVP_FROM: nobody reads that address
-      ...letter(WORDS.toThem),
+      ...letter(WORDS.toThem, 'RSVP_EMAIL_TO_THEM_SUBJECT', 'RSVP_EMAIL_TO_THEM_BODY'),
     });
   } catch (err) {
     // The RSVP arrived; only the courtesy didn't. Worth knowing about, not

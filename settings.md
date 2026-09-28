@@ -1314,3 +1314,33 @@ No effect on standard screens.
 ```js
 LOWER_RESOLUTION_WHILE_MOVING = true
 ```
+
+## The admin page (/admin)
+
+The page where the site's words and settings are edited. It is laid out like
+the home page, without the photos. Only people allowed in by Cloudflare
+Access can open it.
+
+The big title at the top of the admin page.
+
+```js
+ADMIN_TITLE = "The School From Scratch"
+```
+
+A line of text under the title. Leave empty ("") for none.
+
+```js
+ADMIN_SUBTITLE = "Editing the website. Choose a page below to change its words, or Settings to change everything else."
+```
+
+How far apart the sections sit down the admin page, in pixels.
+
+```js
+ADMIN_SPACE_BETWEEN_SECTIONS = 160
+```
+
+What the settings are called in the admin's menu.
+
+```js
+ADMIN_SETTINGS_LABEL = "Settings"
+```

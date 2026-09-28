@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Edit the website</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <!-- The home screen: title, the line under it, and the options, laid out
+       like the site's own home page but without the photos. -->
+  <header id="home">
+    <div id="menu">
+      <h1>The School From Scratch</h1>
+      <p class="subtitle" hidden></p>
+      <nav aria-label="Pages"></nav>
+      <p class="status" id="status" role="status">Loading the latest version&hellip;</p>
+    </div>
+  </header>
+
+  <!-- One section per option, filled in by admin.js. -->
+  <main id="sections"></main>
+
+  <!-- The bar across the top, shown once the options above scroll away. -->
+  <nav id="quick-nav" aria-label="Menu">
+    <div id="quick-list"></div>
+  </nav>
+
+  <!-- Unsaved settings: how many, and the way to save them. -->
+  <div id="settings-bar" hidden>
+    <span id="settings-count"></span>
+    <button type="button" class="button" id="settings-undo">Undo all</button>
+    <button type="button" class="button primary" id="settings-review">Review &amp; save</button>
+  </div>
+
+  <!-- The changes, shown before anything is saved. -->
+  <dialog id="review" aria-labelledby="review-title">
+    <form method="dialog">
+      <h2 id="review-title">Review your changes</h2>
+      <p class="review-intro" id="review-intro"></p>
+      <div id="review-body"></div>
+      <p class="review-error" id="review-error" role="alert" hidden></p>
+      <div class="actions">
+        <button type="button" class="button" id="review-cancel">Keep editing</button>
+        <button type="button" class="button primary" id="review-save">Save to the website</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" hidden></div>
+
+<script src="/markdown.js"></script>
+<script src="/admin/admin.js"></script>
+</body>
+</html>

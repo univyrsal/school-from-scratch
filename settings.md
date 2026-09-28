@@ -1257,7 +1257,7 @@ GRID_ENABLED = false
 Size of each grid square at normal zoom.
 
 ```js
-GRID_SQUARE_SIZE = 50
+GRID_SQUARE_SIZE = 51
 ```
 
 Line color. The last number is how visible the lines are:

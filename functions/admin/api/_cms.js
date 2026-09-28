@@ -34,14 +34,19 @@ export function github(env, apiPath, init = {}) {
   });
 }
 
-// Every editable file on main right now: [{ path, sha }], settings.md first,
-// then the sections in alphabetical order.
-export async function listEditable(env) {
+// Every file on main right now: [{ path, sha }].
+export async function listFiles(env) {
   const res = await github(env, `git/trees/${BRANCH}?recursive=1`);
   if (!res.ok) throw new GitHubError('list the files', res);
   const tree = await res.json();
-  return tree.tree
-    .filter(item => item.type === 'blob' && isEditable(item.path))
+  return tree.tree.filter(item => item.type === 'blob').map(item => ({ path: item.path, sha: item.sha }));
+}
+
+// Every editable file on main right now: [{ path, sha }], settings.md first,
+// then the sections in alphabetical order.
+export async function listEditable(env) {
+  return (await listFiles(env))
+    .filter(item => isEditable(item.path))
     .map(item => ({ path: item.path, sha: item.sha }))
     .sort((a, b) => (a.path === 'settings.md' ? -1 : b.path === 'settings.md' ? 1 : a.path.localeCompare(b.path)));
 }

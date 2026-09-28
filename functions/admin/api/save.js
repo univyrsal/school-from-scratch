@@ -23,8 +23,9 @@
 //
 // _middleware.js has already checked the Access sign-in before this runs.
 
-import { isEditable, github, readFile, toBase64Utf8, json, BRANCH } from './_cms.js';
-import { writeSettings, SettingsError } from './_settings.js';
+import { isEditable, github, readFile, listFiles, toBase64Utf8, json, BRANCH } from './_cms.js';
+import { readSettings, writeSettings, SettingsError } from './_settings.js';
+import { checkLinks } from './_links.js';
 
 const MOST_CHARACTERS = 200000;
 
@@ -81,11 +82,19 @@ export async function onRequestPost({ request, env }) {
     try {
       const done = writeSettings(current.text.replace(/\r\n?/g, '\n'), body.changes);
       text = done.text;
+
+      // Settings that name files (menu pages, photos, embeds) must still
+      // point at files that exist.
+      const values = Object.fromEntries(readSettings(text).map(e => [e.name, e.value]));
+      const problems = checkLinks(values, done.changed, (await listFiles(env)).map(f => f.path));
+      if (problems.length) return oops(problems.join('\n') + '\nNothing was saved.', 400);
+
       message = 'Edit settings from the admin: ' + (done.changed.length > 6
         ? done.changed.slice(0, 5).join(', ') + ` and ${done.changed.length - 5} more`
         : done.changed.join(', '));
     } catch (e) {
       if (e instanceof SettingsError) return oops(e.message, 400);
+      if (e.status) return oops('GitHub couldn\'t be reached to save this. Please try again in a minute.', 502);
       console.error('save: settings writer failed', e);
       return oops('Something went wrong putting your changes into the settings. Nothing was saved.', 500);
     }

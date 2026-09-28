@@ -266,7 +266,8 @@
         el('div', {}, el('span', { class: 'pane-label', text: 'How it will look' }), preview)),
       el('p', { class: 'edit-help', html:
         '<code>**bold**</code> &nbsp; <code>*italic*</code> &nbsp; <code>[words](address)</code> for a link &nbsp; ' +
-        '<code>## </code> or <code>### </code> at the start of a line for a heading &nbsp; <code>- </code> for a list. ' +
+        '<code>### </code> for a heading &nbsp; <code>## </code> for a centered name (the lines right under it are centered too) &nbsp; ' +
+        '<code>- </code> for a list &nbsp; <code>1) </code> for numbered steps &nbsp; <code>-&gt;</code> and <code>&lt;-</code> on their own lines to center what\'s between. ' +
         'A blank line starts a new paragraph.' }),
       el('div', { class: 'actions' }, cancel, review));
 

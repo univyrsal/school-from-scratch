@@ -254,8 +254,8 @@
     const heading = el('h2', { text: option.label });
     const note = el('p', { class: 'file-note', text: option.page ? `Its own page: ${option.page}` : 'On the home page' });
     const view = el('div', { class: 'view page-text' });
-    const editButton = el('button', { type: 'button', class: 'button primary', text: 'Edit' });
-    const viewActions = el('div', { class: 'actions' }, editButton);
+    const editButton = el('button', { type: 'button', class: 'button primary', text: `Edit ${option.label}` });
+    const viewActions = el('div', { class: 'actions top-actions' }, editButton);
     const textBox = el('textarea', { class: 'edit-text', spellcheck: 'true', 'aria-label': `Words for ${option.label}` });
     const preview = el('div', { class: 'preview page-text' });
     const cancel = el('button', { type: 'button', class: 'button', text: 'Cancel' });
@@ -328,7 +328,7 @@
       });
     });
 
-    section.append(heading, note, view, viewActions, editor);
+    section.append(heading, note, viewActions, view, editor);
     return section;
   }
 

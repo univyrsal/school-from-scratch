@@ -744,3 +744,7 @@ body {
   transform: translateX(-50%);
 }
 #toast[hidden] { display: none; }
+
+/* The Edit button sits at the top of its section, above the words. */
+.actions.top-actions { margin: 0 0 1.6em; }
+.actions.top-actions[hidden] { display: none; }

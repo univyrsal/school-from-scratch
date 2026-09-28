@@ -1,6 +1,10 @@
 # Local only: notes and documents for Maxwell and Claude. Never pushed.
 private/
 
+# Access AUD tags for the CMS. Already covered by private/ above; named
+# here too so it stays ignored even if private/ ever stops being ignored.
+private/Secrets.md
+
 # Notes app (Obsidian) settings, created when a folder is opened in it.
 .obsidian/
 

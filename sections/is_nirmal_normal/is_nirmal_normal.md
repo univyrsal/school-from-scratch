@@ -20,10 +20,10 @@ Our introductory performance will be on **October 4th, 2-3:15pm** at the **[Ojai
 This performance is completely **pay what you can**. We do not want this show to be inaccessible for anyone. For those who can pay the suggested donation is **$20** for general admission and **$10** for seniors and students. Our preferred payment method is Zelle.
 <-
 How to make a payment through Zelle:
-1. Open your bank's app and choose Send with Zelle.
-2. Send to the Zelle tag **{ZELLE_RECIPIENT}**.
-3. Enter the amount.
-4. Please put the names of those in your group in the memo.
+1. Open your bank's app and find Zelle (usually under Pay & Transfer).
+2. Choose send and enter the Zelle tag "**{ZELLE_RECIPIENT}**"
+3. Enter the payment amount.
+4. If there's a memo field, list the names of everyone in your group.
 
 ### Direction
 ->

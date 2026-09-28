@@ -82,7 +82,7 @@ Reply to this message to answer them directly.`
 RSVP_EMAIL_TO_THEM_SUBJECT = "Your RSVP for '{show}'"
 RSVP_EMAIL_TO_THEM_BODY = `Your RSVP is in. Thank you!
 
-We have put you down for {seats} at {show}.
+We have put you down for {seats} at {show}
 
 When: {date}
 Where: {place}

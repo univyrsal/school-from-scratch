@@ -21,8 +21,8 @@ This performance is completely **pay what you can**. We do not want this show to
 <-
 How to make a payment through Zelle:
 1. Open your bank's app and find Zelle (usually under Pay & Transfer).
-2. Choose send and enter the Zelle tag "**{ZELLE_RECIPIENT}**"
-3. If there is a name field you can put **The Transformative Education Center** (or any name works).
+2. Choose send and enter the **Zelle tag** "**{ZELLE_RECIPIENT}**"
+3. If there is a **name** field you can put **The Transformative Education Center** (or any name works).
 4. Enter the payment amount.
 5. If there's a memo field, list the names of everyone in your group.
 

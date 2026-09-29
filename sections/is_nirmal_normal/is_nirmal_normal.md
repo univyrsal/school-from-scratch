@@ -9,7 +9,7 @@ by Badal Sircar.
 
 ### Performances
 ->
-Our introductory performance will be on **October 4th, 2-3:15pm** at the **[Ojai Retreat](https://ojairetreat.com/)**! Seats are limited. Please RSVP below so we can save you a spot:
+Our introductory performance is on **October 4th, 2-3:15pm** at the **[Ojai Retreat](https://ojairetreat.com/)**! Seats are limited. Please RSVP to save your spot:
 <-
 !rsvp!
 
@@ -21,7 +21,7 @@ This performance is completely **pay what you can**. We do not want this show to
 <-
 How to make a payment through Zelle:
 1. Open your bank's app and find Zelle (usually under Pay & Transfer).
-2. Choose send and enter the **Zelle tag** "**{ZELLE_RECIPIENT}**"
+2. Choose send and from options select the **Zelle Tag** option and enter "**{ZELLE_RECIPIENT}**"
 3. If there is a **name** field you can put **The Transformative Education Center** (or any name works).
 4. Enter the payment amount.
 5. If there's a memo field, list the names of everyone in your group.

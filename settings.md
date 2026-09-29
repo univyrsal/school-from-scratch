@@ -1326,13 +1326,13 @@ Access can open it.
 The big title at the top of the admin page.
 
 ```js
-ADMIN_TITLE = "The School From Scratch  (Ojai)"
+ADMIN_TITLE = "The School From Scratch "
 ```
 
 A line of text under the title. Leave empty ("") for none.
 
 ```js
-ADMIN_SUBTITLE = "Editing the website. Choose a page below to change its text, or go to 'settings' to change everything else."
+ADMIN_SUBTITLE = "(Ojai)                                                                          Editing the website. Choose a page below to change its text, or go to 'settings' to change everything else."
 ```
 
 How far apart the sections sit down the admin page, in pixels.

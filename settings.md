@@ -798,6 +798,7 @@ folder.
 MENU_LINKS = {
   "Payments": "payments.html",
   "Contact": "contact.html",
+  "TEC": "https://www.transformativeeducationcenter.com/",
 }
 ```
 
@@ -809,6 +810,7 @@ come from MENU_LINKS above, the same as any other option's.
 TOP_MENU_EXTRA_ITEMS = [
   "Payments",
   "Contact",
+  "TEC",
 ]
 ```
 

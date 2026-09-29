@@ -1,5 +1,4 @@
 The learning center's base is at [Regen Tropics](https://regentropics.com/), 36 Kunkle St, Oak View, California from where we will make frequent field trips to other spaces in and around Ojai.
-!map!
 
 We start operating with a maximum of 15 children, 4-18 yrs, in a multi-age learning environment with a minimum 3 day/week commitment.
 

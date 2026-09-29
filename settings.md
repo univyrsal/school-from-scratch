@@ -1326,7 +1326,7 @@ Access can open it.
 The big title at the top of the admin page.
 
 ```js
-ADMIN_TITLE = "The School From Scratch  (OJAI)"
+ADMIN_TITLE = "The School From Scratch  (Ojai)"
 ```
 
 A line of text under the title. Leave empty ("") for none.

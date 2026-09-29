@@ -748,3 +748,93 @@ body {
 /* The Edit button sits at the top of its section, above the words. */
 .actions.top-actions { margin: 0 0 1.6em; }
 .actions.top-actions[hidden] { display: none; }
+
+/* ---- Pages of their own (Payments, Contact, the play) ---------------------
+   Shown the way those pages show their words (page.css): a narrower column,
+   smaller words, headings in the heading font. The play's page has fonts of
+   its own (PLAY_HEADING_FONT, PLAY_BODY_FONT). */
+.page-text.page-file {
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: calc(var(--body-size) * 0.75);
+  line-height: 1.6;
+  text-align: left;
+}
+.preview.page-file { max-width: none; }
+.preview.page-file > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.page-file h2,
+.page-file h3,
+.page-file h3.name,
+.page-file h4 {
+  margin: 0 0 12px;
+  font-family: var(--heading-font);
+  font-weight: var(--heading-weight);
+  font-size: calc(var(--body-size) * 1.1);
+  text-align: center;
+}
+.page-file p { margin: 0 0 1em; max-width: none; }
+.page-file ul,
+.page-file ol { margin: 0 0 1em; padding-left: 1.3em; max-width: none; }
+.page-file ol.steps { margin: 0; padding: 0; }
+.page-file p.picture { margin: 0; line-height: 1.6; }
+.page-file .md-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 1em;
+  border-radius: var(--section-image-radius, 15px);
+  object-fit: initial;
+}
+.page-file.play-page {
+  font-family: var(--play-body-font, var(--body-font));
+  font-weight: var(--play-body-weight, var(--body-weight));
+}
+.page-file.play-page h2,
+.page-file.play-page h3,
+.page-file.play-page h4 {
+  font-family: var(--play-heading-font, var(--heading-font));
+  font-weight: var(--play-heading-weight, var(--heading-weight));
+}
+
+/* ---- The formatting key ---------------------------------------------------- */
+
+.section.key { width: min(1100px, 100% - 32px); }
+.key-table { border-top: 1.5px solid var(--line); }
+.key-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1.2fr) minmax(200px, 1.4fr);
+  gap: 20px;
+  align-items: start;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.key-head {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+.key-name { display: flex; flex-direction: column; gap: 4px; font-size: 16px; line-height: 1.45; }
+.key-name span { color: var(--quiet); font-size: 15px; }
+.key-type {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--soft);
+  font: 14.5px/1.55 ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.key-result { font-size: 17px; }
+.key-result > :first-child { margin-top: 0; }
+.key-result .md-image { max-width: 120px; }
+.key-instead { color: var(--quiet); font-style: italic; }
+@media (max-width: 760px) {
+  .key-row { grid-template-columns: 1fr; gap: 8px; }
+  .key-head { display: none; }
+}

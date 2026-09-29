@@ -89,10 +89,26 @@
     const bodyFont = setting('BODY_FONT', 'Quicksand');
     const bodyWeight = setting('BODY_FONT_WEIGHT', 500);
     const family = (f, weights) => 'family=' + encodeURIComponent(f) + ':wght@' + [...new Set(weights)].sort((a, b) => a - b).join(';');
+    // The play's page has fonts of its own (PLAY_*_FONT; empty = the site's).
+    const playHeading = String(setting('PLAY_HEADING_FONT', '')).trim();
+    const playBody = String(setting('PLAY_BODY_FONT', '')).trim();
+    const playHeadingWeight = setting('PLAY_HEADING_FONT_WEIGHT', 600);
+    const playBodyWeight = setting('PLAY_BODY_FONT_WEIGHT', 500);
+    const families = [family(headingFont, [headingWeight]), family(bodyFont, [bodyWeight, 700])];
+    if (playHeading) families.push(family(playHeading, [playHeadingWeight]));
+    if (playBody) families.push(family(playBody, [playBodyWeight, 700]));
     document.head.appendChild(el('link', {
       rel: 'stylesheet',
-      href: `https://fonts.googleapis.com/css2?${family(headingFont, [headingWeight])}&${family(bodyFont, [bodyWeight, 700])}&display=swap`,
+      href: `https://fonts.googleapis.com/css2?${families.join('&')}&display=swap`,
     }));
+    if (playHeading) {
+      root.setProperty('--play-heading-font', `'${playHeading}', Georgia, serif`);
+      root.setProperty('--play-heading-weight', playHeadingWeight);
+    }
+    if (playBody) {
+      root.setProperty('--play-body-font', `'${playBody}', 'Segoe UI', sans-serif`);
+      root.setProperty('--play-body-weight', playBodyWeight);
+    }
     root.setProperty('--heading-font', `'${headingFont}', Georgia, serif`);
     root.setProperty('--heading-weight', headingWeight);
     root.setProperty('--body-font', `'${bodyFont}', 'Segoe UI', sans-serif`);
@@ -244,6 +260,63 @@
     }
   }
 
+  // The play's page, which has fonts of its own.
+  const PLAY_PAGE = 'is_nirmal_normal.html';
+
+  // ---- The formatting key ------------------------------------------------------
+
+  // Every rule markdown.js follows, each with an example shown both as typed
+  // and as the site draws it (by markdown.js itself, so the key can't drift
+  // from what the site really does).
+  const KEY = [
+    ['Paragraphs', 'Leave a blank line between them.', 'First paragraph.\n\nSecond paragraph.'],
+    ['More space', 'Each extra blank line adds a line of space.', 'Above.\n\n\n\nBelow, with space between.'],
+    ['A new line in the same paragraph', 'End the line with two spaces (you won\'t see them).', 'First line  \nSecond line'],
+    ['Bold', 'Two stars either side.', '**bold words**'],
+    ['Italic', 'One star, or an underscore, either side.', '*italic words* or _these_'],
+    ['Bold and italic', 'Three stars either side.', '***both at once***'],
+    ['Heading', '### and a space at the start of the line.', '### A heading'],
+    ['Centered name', '## and a space. The lines right under it are centered too, up to the next blank line.', '## Jane Doe\nFounding Teacher'],
+    ['Bulleted list', 'A dash (or * or +) and a space at the start of each line.', '- Apples\n- Pears'],
+    ['Numbered list', 'A number, a full stop and a space.', '1. First\n2. Second'],
+    ['Steps', 'A number and a bracket: each number sits in a circle.', '1) Open the app\n2) Send the payment'],
+    ['List with room between', 'A blank line between the items.', '- One\n\n- Two'],
+    ['A long item', 'Start the next line with a space to carry on the same item.', '- A long item that\n  carries on here'],
+    ['Centered words', '-> on a line of its own before them, <- on a line of its own after. Everything between is centered: paragraphs, headings, lists.', '->\nThese words\nare centered.\n<-'],
+    ['One centered line', '-> and <- on the same line, either side of the words.', '-> Just this line <-'],
+    ['Two columns', 'Two or more lines of Left — Right, with an em dash (—) and a space either side. Good for a cast list.', '**The Writer** — Gopal\n**Auntie** — Teena'],
+    ['Link', 'The words in [ ], then the address in ( ). Web addresses open in a new tab.', '[Ojai Retreat](https://ojairetreat.com/)'],
+    ['Link to a page here', 'The page\'s file name as the address.', '[Make a payment](payments.html)'],
+    ['Email or phone link', 'mailto: or tel: before it.', '[Email us](mailto:someone@example.com)'],
+    ['Picture', 'An ! then [a description] then (the file). On a line of its own it sits centered.', '![A headshot](assets/gopal_headshot.jpeg)'],
+    ['Something built separately', 'Its name between ! marks, on a line of its own. The names are listed in the EMBEDS setting (wheel, map, rsvp).', '!rsvp!', 'The RSVP box goes here (it isn\'t shown in this key).'],
+    ['A setting\'s value', 'Its name in { }. Only on pages of their own (Payments, Contact, the play).', 'Send it to {ZELLE_RECIPIENT}', null, true],
+    ['A break', '--- on a line of its own ends what came before. Nothing is drawn.', 'Before\n---\nAfter'],
+    ['Show a mark as it is', 'A \\ just before it.', '\\*not italic\\*'],
+  ];
+
+  function buildKey() {
+    const section = el('section', { class: 'section key', id: 'formatting' },
+      el('h2', { text: 'Formatting key' }),
+      el('p', { class: 'file-note', text: 'How to write the words on every page' }));
+    const table = el('div', { class: 'key-table', role: 'table', 'aria-label': 'Formatting rules' },
+      el('div', { class: 'key-row key-head', role: 'row' },
+        el('span', { role: 'columnheader', text: 'To get' }),
+        el('span', { role: 'columnheader', text: 'Type' }),
+        el('span', { role: 'columnheader', text: 'It looks like' })));
+    for (const [name, how, example, instead, pageOnly] of KEY) {
+      const result = el('div', { class: 'key-result page-text', role: 'cell' });
+      if (instead) result.append(el('p', { class: 'key-instead', text: instead }));
+      else renderInto(result, example, { page: pageOnly ? 'x' : '' });
+      table.append(el('div', { class: 'key-row', role: 'row' },
+        el('div', { class: 'key-name', role: 'cell' }, el('strong', { text: name }), el('span', { text: how })),
+        el('pre', { class: 'key-type', role: 'cell', text: example }),
+        result));
+    }
+    section.append(table);
+    return section;
+  }
+
   // ---- A page's section: read, then edit ------------------------------------
 
   const unsaved = new Set(); // things with changes not yet saved
@@ -253,11 +326,15 @@
     const section = el('section', { class: 'section' + (setting('SECTION_PICTURE_HEIGHT', 0) ? ' set-picture-height' : ''), id: option.id });
     const heading = el('h2', { text: option.label });
     const note = el('p', { class: 'file-note', text: option.page ? `Its own page: ${option.page}` : 'On the home page' });
-    const view = el('div', { class: 'view page-text' });
+    // A page of its own (Payments, Contact, the play) is laid out and sized
+    // like that page, not like a home-page section; the play also has fonts
+    // of its own.
+    const look = option.page ? ' page-file' + (option.page === PLAY_PAGE ? ' play-page' : '') : '';
+    const view = el('div', { class: 'view page-text' + look });
     const editButton = el('button', { type: 'button', class: 'button primary', text: `Edit ${option.label}` });
     const viewActions = el('div', { class: 'actions top-actions' }, editButton);
     const textBox = el('textarea', { class: 'edit-text', spellcheck: 'true', 'aria-label': `Words for ${option.label}` });
-    const preview = el('div', { class: 'preview page-text' });
+    const preview = el('div', { class: 'preview page-text' + look });
     const cancel = el('button', { type: 'button', class: 'button', text: 'Cancel' });
     const review = el('button', { type: 'button', class: 'button primary', text: 'Review & save' });
     const editor = el('div', { class: 'editor', hidden: true },
@@ -265,10 +342,8 @@
         el('div', {}, el('label', { class: 'pane-label', text: 'Words' }), textBox),
         el('div', {}, el('span', { class: 'pane-label', text: 'How it will look' }), preview)),
       el('p', { class: 'edit-help', html:
-        '<code>**bold**</code> &nbsp; <code>*italic*</code> &nbsp; <code>[words](address)</code> for a link &nbsp; ' +
-        '<code>### </code> for a heading &nbsp; <code>## </code> for a centered name (the lines right under it are centered too) &nbsp; ' +
-        '<code>- </code> for a list &nbsp; <code>1) </code> for numbered steps &nbsp; <code>-&gt;</code> and <code>&lt;-</code> on their own lines to center what\'s between. ' +
-        'A blank line starts a new paragraph.' }),
+        'Every way to format the words — bold, lists, headings, centering and more — is in the ' +
+        '<a href="#formatting">formatting key</a> at the top of this page.' }),
       el('div', { class: 'actions' }, cancel, review));
 
     const show = () => renderInto(view, files.get(option.file).text, option);
@@ -917,7 +992,7 @@
   function scrollToHash(glide, done) {
     const id = decodeURIComponent(location.hash.slice(1));
     const target = id && document.getElementById(id);
-    const top = target && sectionEls.includes(target) ? sectionTop(target) : 0;
+    const top = target && target.parentNode === $("#sections") ? sectionTop(target) : 0;
     const ms = target ? Math.max(0, setting('SECTION_SCROLL_MS', 1000)) : Math.max(1, setting('HOME_TRAVEL_MS', 800));
     if (glide) glideTo(top, ms, done);
     else window.scrollTo({ top, behavior: 'instant' });
@@ -994,7 +1069,7 @@
     readLetterSettings();
     options = workOutOptions();
     sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o) : buildPageSection(o)));
-    $('#sections').replaceChildren(...sectionEls);
+    $('#sections').replaceChildren(buildKey(), ...sectionEls);
     buildMenus();
     status.textContent = '';
     if (location.hash) {

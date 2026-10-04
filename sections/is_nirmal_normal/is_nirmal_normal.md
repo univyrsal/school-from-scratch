@@ -9,7 +9,7 @@ by Badal Sircar.
 
 ### Performances
 ->
-Our introductory performance is on **October 4th, 2-3:15pm** at the **[Ojai Retreat](https://ojairetreat.com/)**! Seats are limited. Please RSVP to save your spot:
+Our introductory performance is on **October 4th, 2-3:30pm** at the **[Ojai Retreat](https://ojairetreat.com/)**! Seats are limited. Please RSVP to save your spot:
 <-
 !rsvp!
 

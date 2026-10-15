@@ -106,10 +106,24 @@ function pageSlug(name) {
   return String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+// Does this address lead to the play's page? With PLAY_PAGE_ENABLED off,
+// anything that does is hidden. Must match leadsToPlay() in index.html.
+function leadsToPlay(address) {
+  return /(^|\/)is_nirmal_normal(\.html)?([?#]|$)/i.test(String(address).trim());
+}
+
 // Other scripts on a page (payments.js) wait on this before reading settings.
 window.settingsLoaded = loadSettings();
 
 window.settingsLoaded.then(() => {
+  // The play's page, while it's switched off (PLAY_PAGE_ENABLED), sends
+  // anyone who arrives on it to the home page.
+  const PLAY_OFF = setting('PLAY_PAGE_ENABLED', true) === false;
+  if (PLAY_OFF && leadsToPlay(location.pathname)) {
+    location.replace('index.html');
+    return;
+  }
+
   const root = document.documentElement.style;
   root.setProperty('--bg', setting('BACKGROUND_COLOR', '#000000'));
   root.setProperty('--fg', setting('TEXT_COLOR', '#ffffff'));
@@ -162,13 +176,16 @@ window.settingsLoaded.then(() => {
     home.textContent = String(setting('TOP_MENU_HOME_LABEL', 'Home')).trim() || 'Home';
     // The menu's options, then any that belong only to the bar.
     const inBar = [...setting('MENU_ITEMS', []), ...setting('TOP_MENU_EXTRA_ITEMS', [])];
+    // An option with its own address (MENU_LINKS) goes there; the rest
+    // lead to their section on the home page.
+    const ownAddress = (label) => String((setting('MENU_LINKS', {}) || {})[label] || '').trim();
     quickList.replaceChildren(home, ...inBar
-      .map((item) => String(item).trim()).filter(Boolean).map((label) => {
+      .map((item) => String(item).trim()).filter(Boolean)
+      // An option leading to the play's page is left out while it's off.
+      .filter((label) => !(PLAY_OFF && leadsToPlay(ownAddress(label))))
+      .map((label) => {
         const link = document.createElement('a');
-        // An option with its own address (MENU_LINKS) goes there; the rest
-        // lead to their section on the home page.
-        const own = String((setting('MENU_LINKS', {}) || {})[label] || '').trim();
-        link.href = own || 'index.html#' + pageSlug(label);
+        link.href = ownAddress(label) || 'index.html#' + pageSlug(label);
         link.textContent = label;
         return link;
       }));

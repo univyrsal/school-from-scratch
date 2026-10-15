@@ -788,6 +788,12 @@ function pageSlug(name) {
   return String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+// Does this address lead to the play's page? With PLAY_PAGE_ENABLED off,
+// anything that does is hidden. Must match leadsToPlay() in page.js.
+function leadsToPlay(address) {
+  return /(^|\/)is_nirmal_normal(\.html)?([?#]|$)/i.test(String(address).trim());
+}
+
 function setting(name, fallback) {
   const value = window[name];
   if (value === undefined) return fallback;
@@ -831,6 +837,9 @@ function startGallery() {
   const MIN_SCALE = 1 / Math.max(1, setting('ZOOM_OUT_LIMIT', 3));
   const MAX_SCALE = Math.max(1, setting('ZOOM_IN_LIMIT', 3));
   const WHEEL_SPEED = setting('WHEEL_ZOOM_SPEED', 0.0015);
+  // The play's page on or off (PLAY_PAGE_ENABLED): when off, the notice and
+  // any menu option leading to it are hidden.
+  const PLAY_OFF = setting('PLAY_PAGE_ENABLED', true) === false;
   // Read mode: a linear page, scrolled up and down only. Explore mode: pan in
   // any direction and zoom in and out.
   const GALLERY_ON = setting('GALLERY_ENABLED', true);
@@ -996,8 +1005,9 @@ function startGallery() {
   menuEl.classList.toggle('has-subtitle', !!subtitle);
 
   // The notice under the title: its words, where it leads, and its size.
-  const noticeText = String(setting('HOME_NOTICE', '')).trim();
   const noticeLink = String(setting('HOME_NOTICE_LINK', '')).trim();
+  // A notice leading to the play's page goes when the play's page is off.
+  const noticeText = PLAY_OFF && leadsToPlay(noticeLink) ? '' : String(setting('HOME_NOTICE', '')).trim();
   const noticeEl = document.getElementById('notice');
   rootStyle.setProperty('--notice-size', Math.max(8, setting('HOME_NOTICE_TEXT_SIZE', 18)) + 'px');
   rootStyle.setProperty('--notice-gap', Math.max(0, setting('HOME_NOTICE_GAP', 20)) + 'px');
@@ -1113,7 +1123,9 @@ function startGallery() {
   // a section on this page: the payments page, say.
   const OPTION_LINKS = setting('MENU_LINKS', {});
   const optionLink = (label) => String(OPTION_LINKS[label] || '').trim();
-  const items = setting('MENU_ITEMS', []).map((item) => String(item).trim()).filter(Boolean);
+  // An option leading to the play's page is left out while that page is off.
+  const shown = (label) => !(PLAY_OFF && leadsToPlay(optionLink(label)));
+  const items = setting('MENU_ITEMS', []).map((item) => String(item).trim()).filter(Boolean).filter(shown);
   if (items.length) {
     menuEl.querySelector('nav').replaceChildren(...items.map((label) => {
       const link = document.createElement('a');
@@ -2593,7 +2605,7 @@ function startGallery() {
   // from the main menu. Their addresses come from MENU_LINKS, the same as
   // any other option's.
   const extras = setting('TOP_MENU_EXTRA_ITEMS', []).map((item) => String(item).trim()).filter(Boolean)
-    .map((label) => {
+    .filter(shown).map((label) => {
       const link = document.createElement('a');
       link.href = optionLink(label) || pageSlug(label) + '.html';
       link.dataset.label = label;

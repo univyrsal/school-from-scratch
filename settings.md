@@ -404,6 +404,18 @@ HOME_TRAVEL_MS = 800
 
 ## The play's page (is_nirmal_normal.html)
 
+The play's page on or off. `false` takes the whole thing down at once:
+anyone who goes to the page is sent to the home page instead, and anything
+that leads to it is hidden — the notice on the home page (only while
+HOME_NOTICE_LINK leads to the play's page, so a notice about something else
+is left alone) and any menu option whose address in MENU_LINKS is the
+play's page. Nothing else needs changing; turn it back to `true` and it all
+comes back as it was.
+
+```js
+PLAY_PAGE_ENABLED = true
+```
+
 Behind the words on the play's page, the person icon is repeated in an even
 grid, with one of them drawn as an outline instead of filled in. Its words
 are in sections/is_nirmal_normal/is_nirmal_normal.md, like the other pages.

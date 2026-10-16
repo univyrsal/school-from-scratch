@@ -413,7 +413,7 @@ play's page. Nothing else needs changing; turn it back to `true` and it all
 comes back as it was.
 
 ```js
-PLAY_PAGE_ENABLED = true
+PLAY_PAGE_ENABLED = false
 ```
 
 Behind the words on the play's page, the person icon is repeated in an even

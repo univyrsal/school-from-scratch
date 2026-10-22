@@ -7,6 +7,7 @@ Gopal brings decades of experience in schools, universities, teacher education, 
 For more information, read his [Antioch biography](https://www.antioch.edu/faculty/gopal-krishnamurthy/).
 
 ## Sunsong (Susan) Clark
+![Headshot of Sunsong](assets/sunsong_headshot.jpeg)
 Founding Director/Teacher, The School From Scratch.
 
 Sunsong's work entails developing rich learning environments where children pursue their trajectories of interest in an atmosphere of mutual learning alongside observant adults focused on understanding how the child makes meaning of the world around them and acts those meanings out. She holds an MEd with a concentration in the Reggio Emilia approach, and certificate in ECE. She spent 18 years homesteading off-grid in a small remote community. In addition, she is constantly amazed by nature and the everyday beauty of all kinds of things.
@@ -16,6 +17,7 @@ Child safety is a priority at The School From Scratch and teachers have backgrou
 Sunsong (Susan) Clark (director, teacher, and safeguarding lead), served for years as government mandated residential ***school safeguarding lead*** and ***conducted child protection training*** for staff and teachers.
 
 ## Amol Gejawar
+![Headshot of Sunsong](assets/amol_headshot.jpeg)
 Founding Director/Teacher, The School From Scratch.
 
 Twelve years of expertise in natural learning, ecological restoration, organic farming, alternative architecture, and traditional craftsmanship, have cultivated Amol's diverse and impactful career. His commitment to sustainability and community-focused initiatives continues to drive his work in these interconnected domains. He holds a Bachelors in Engineering. Amol brings years of experience in educational leadership, and the observation and education of children.

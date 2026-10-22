@@ -840,6 +840,9 @@ function startGallery() {
   // The play's page on or off (PLAY_PAGE_ENABLED): when off, the notice and
   // any menu option leading to it are hidden.
   const PLAY_OFF = setting('PLAY_PAGE_ENABLED', true) === false;
+  // Browser zoom (Ctrl + wheel) enlarges the page instead of being undone by
+  // the shrink-to-fit on small screens.
+  const BROWSER_ZOOM_ENLARGES = setting('BROWSER_ZOOM_ENLARGES', true) !== false;
   // Read mode: a linear page, scrolled up and down only. Explore mode: pan in
   // any direction and zoom in and out.
   const GALLERY_ON = setting('GALLERY_ENABLED', true);
@@ -2073,8 +2076,22 @@ function startGallery() {
     animFrame = requestAnimationFrame(step);
   }
 
+  // How far the browser itself is zoomed in (Ctrl + wheel): 1.5 at 150%.
+  // Browser zoom leaves the window's outside width alone but makes the page
+  // inside it narrower in page pixels, so the two compare. A phone has no
+  // such gap, and a browser that sizes both the same way reads as 1.
+  function browserZoom() {
+    if (!BROWSER_ZOOM_ENLARGES) return 1;
+    const z = window.outerWidth / window.innerWidth;
+    // Below 1.05 is a scrollbar or window border, not zoom (the smallest
+    // zoom step is 110%).
+    return Number.isFinite(z) && z >= 1.05 ? Math.min(z, 5) : 1;
+  }
   function homeScale() {
-    const W = window.innerWidth, H = window.innerHeight;
+    // Fit the menu to the window as it would be at 100%, so browser zoom
+    // isn't cancelled out by shrinking the page to match.
+    const zoom = browserZoom();
+    const W = window.innerWidth * zoom, H = window.innerHeight * zoom;
     const fit = Math.min(1, (W - 32) / menu.offsetWidth, (H - 120) / menu.offsetHeight);
     return clamp(fit, MIN_SCALE, 1);
   }
@@ -2144,15 +2161,22 @@ function startGallery() {
       const worldTop = -g.top / g.s, worldBottom = photosEnd + g.H / 2 / g.s;
       const cx0 = Math.floor((-halfW - PAD) / CHUNK), cx1 = Math.floor((halfW + PAD) / CHUNK);
       const cy0 = Math.floor((worldTop - PAD) / CHUNK), cy1 = Math.floor((worldBottom + PAD) / CHUNK);
+      // A photo already on the page is kept and only moved and resized, so
+      // a resize or browser zoom doesn't make every photo fade in again.
+      const kept = new Map();
       const els = [];
       for (let cy = cy0; cy <= cy1; cy++) {
         for (let cx = cx0; cx <= cx1; cx++) {
           for (const it of chunkLayout(cx, cy)) {
             if (!it.kept || Math.abs(it.x) - it.hw > halfW || it.y + it.hh < worldTop) continue;
-            els.push(readPhoto(it, g));
+            const key = `${it.index}@${Math.round(it.x)},${Math.round(it.y)}`;
+            const el = readPhoto(it, g, readPhotoEls.get(key));
+            kept.set(key, el);
+            els.push(el);
           }
         }
       }
+      readPhotoEls = kept;
       readLayer.replaceChildren(...els);
       stats.photos = els.length;
     }
@@ -2368,10 +2392,13 @@ function startGallery() {
     window.addEventListener(type, () => { if (glideFrame) endGlide(); }, { passive: true });
   }
 
-  function readPhoto(it, g) {
+  // The photos on the page now, by where they sit, for buildReadPage to keep.
+  let readPhotoEls = new Map();
+  // (existing: the same photo's element from the last build, reused.)
+  function readPhoto(it, g, existing) {
     const photo = photos[it.index];
-    const el = document.createElement('div');
-    el.className = 'read-photo';
+    const el = existing || document.createElement('div');
+    el.className = existing ? existing.className : 'read-photo';
     const r = cornerRadius(it) * g.s;
     Object.assign(el.style, {
       left: (g.W / 2 + (it.x - it.hw) * g.s).toFixed(1) + 'px',
@@ -2381,14 +2408,15 @@ function startGallery() {
       background: FRAME_FILL,
       borderRadius: r + 'px',
     });
-    const img = new Image();
+    const img = existing ? existing.querySelector('img') : new Image();
+    img.width = Math.round(it.w * g.s);
+    img.height = Math.round(it.h * g.s);
+    img.style.borderRadius = Math.max(0, r - FRAME * g.s) + 'px';
+    if (existing) return el;
     img.alt = '';
     img.decoding = 'async';
     img.loading = 'lazy';
     img.draggable = false;
-    img.width = Math.round(it.w * g.s);
-    img.height = Math.round(it.h * g.s);
-    img.style.borderRadius = Math.max(0, r - FRAME * g.s) + 'px';
     img.onload = () => el.classList.add('loaded');
     img.onerror = () => { if (!img.src.endsWith(photo.file)) img.src = IMAGE_DIR + photo.file; };
     img.src = photoSrc(photo.file);

@@ -375,6 +375,21 @@ ZOOM_OUT_LIMIT = 10
 ZOOM_IN_LIMIT = 3
 ```
 
+The browser's own zoom (Ctrl and the mouse wheel, Ctrl and +/−). On a
+small screen the home page shrinks a little so the menu fits; browser zoom
+makes the page look smaller to the site too, so without this, zooming in
+past about 140% would be undone by that shrinking.
+
+- `true` = browser zoom works: the photos, menu and words get bigger as you
+  zoom in, the way they do on any other site. Small screens (phones, narrow
+  windows) still shrink to fit.
+- `false` = the old way: the page shrinks to keep the menu on screen however
+  far the browser is zoomed in.
+
+```js
+BROWSER_ZOOM_ENLARGES = true
+```
+
 Zoom speed for a mouse scroll wheel, and for a trackpad pinch (explore mode).
 
 ```js

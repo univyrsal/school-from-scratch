@@ -62,6 +62,9 @@
     overflow-x: hidden;
   }
   html.read-mode { overflow-y: auto; }
+  /* Browser-zoomed, the page is the 100% page made bigger, so it's wider
+     than the window and can be scrolled sideways. */
+  html.read-mode.zoom-picture { overflow-x: auto; }
   html.read-mode body { overflow: visible; }
   .read-mode #viewport {
     position: relative;
@@ -114,7 +117,7 @@
     margin: 0 0 0.6em;
     font-family: var(--heading-font);
     font-weight: var(--heading-weight);
-    font-size: min(var(--section-heading-size, 44px), 10vw);
+    font-size: min(var(--section-heading-size, 44px), calc(10 * var(--vw, 1vw)));
     line-height: 1.15;
     letter-spacing: 0.02em;
     text-align: center;
@@ -162,12 +165,13 @@
   .section .pairs .pair-dash::before { content: var(--pair-dash-char, "\2014"); }
   /* Side by side there is no room on a narrow screen, so they stack instead,
      each pair kept together and set in the middle. */
+  /* (.wider-than-480: as .wider-than-640 below.) */
   @media (max-width: 480px) {
-    .section .pairs,
-    .two-column-dash .section .pairs { grid-template-columns: 1fr; column-gap: 0; }
-    .section .pairs .pair-left { text-align: center; margin-top: 0.5em; }
-    .section .pairs .pair-right { text-align: center; }
-    .two-column-dash .section .pairs .pair-dash { display: none; }
+    html:not(.wider-than-480) .section .pairs,
+    html:not(.wider-than-480) .two-column-dash .section .pairs { grid-template-columns: 1fr; column-gap: 0; }
+    html:not(.wider-than-480) .section .pairs .pair-left { text-align: center; margin-top: 0.5em; }
+    html:not(.wider-than-480) .section .pairs .pair-right { text-align: center; }
+    html:not(.wider-than-480) .two-column-dash .section .pairs .pair-dash { display: none; }
   }
   /* Pictures in a section (a headshot, for example). */
   .section p.picture { margin: 0.8em 0 0.9em; text-align: center; line-height: 0; }
@@ -253,7 +257,7 @@
     width: min(var(--section-width, 720px), 100% - 32px);
     margin: 0;
     transform: translateX(-50%);
-    font-size: min(var(--end-quote-size, 24px), 6vw);
+    font-size: min(var(--end-quote-size, 24px), calc(6 * var(--vw, 1vw)));
     line-height: 1.5;
     text-align: center;
     pointer-events: auto;
@@ -324,7 +328,7 @@
   }
   .section .phone:hover,
   .section .phone:focus-visible { text-decoration: underline; text-underline-offset: 5px; }
-  .section .venmo { display: block; width: 160px; max-width: 60vw; height: auto; }
+  .section .venmo { display: block; width: 160px; max-width: calc(60 * var(--vw, 1vw)); height: auto; }
 
   /* Faint background grid (drawn by the script), optionally fading out
      toward the screen edges. */
@@ -459,15 +463,17 @@
     text-align: center;
   }
   #menu h1 { white-space: nowrap; }
+  /* (.wider-than-640: browser-zoomed, the page is laid out for the window
+     as it is at 100%, which is wider than this.) */
   @media (max-width: 640px) {
-    #menu { width: 340px; min-width: 0; }
-    #menu h1 { white-space: normal; }
+    html:not(.wider-than-640) #menu { width: 340px; min-width: 0; }
+    html:not(.wider-than-640) #menu h1 { white-space: normal; }
   }
   #menu h1 {
     font-family: var(--heading-font);
     font-weight: var(--heading-weight);
     /* Shrinks on narrow screens so it still fits. */
-    font-size: min(var(--title-size, 76px), 12vw);
+    font-size: min(var(--title-size, 76px), calc(12 * var(--vw, 1vw)));
     line-height: 1.15;
     margin: 0 0 var(--title-gap);
     letter-spacing: 0.02em;
@@ -476,7 +482,7 @@
   #menu .subtitle {
     max-width: 900px;
     margin: 0 auto var(--title-gap);
-    font-size: min(var(--subtitle-size, 24px), 5.5vw);
+    font-size: min(var(--subtitle-size, 24px), calc(5.5 * var(--vw, 1vw)));
     line-height: 1.4;
   }
   #menu.has-subtitle h1 { margin-bottom: var(--subtitle-gap, 16px); }
@@ -492,7 +498,7 @@
     border-radius: var(--notice-radius, 999px);
     background: var(--accent, #e8f0d4);
     color: var(--fg);
-    font-size: min(var(--notice-size, 18px), 5vw);
+    font-size: min(var(--notice-size, 18px), calc(5 * var(--vw, 1vw)));
     line-height: 1.35;
     text-transform: none;
     letter-spacing: 0.02em;
@@ -517,7 +523,7 @@
   #menu a {
     color: var(--fg);
     text-decoration: none;
-    font-size: min(var(--body-size), 6.5vw);
+    font-size: min(var(--body-size), calc(6.5 * var(--vw, 1vw)));
     text-transform: uppercase;
     /* The script widens the sides to cover the spread-out letters, so the
        clickable area never changes size (otherwise it would slip out from
@@ -2129,13 +2135,36 @@ function startGallery() {
   const readLayer = document.createElement('div');
   readLayer.id = 'read-photos';
   let readGeo = null; // { W, H, s, top } where top = page position of the menu's centre
+  // W and H: the size the page is laid out for. Browser-zoomed, that's the
+  // window as it is at 100%, so the page is the 100% page made bigger, like
+  // a picture: nothing rewraps or moves, and it scrolls sideways as well.
+  // screenW and screenH: the window as it is now.
   function readGeometry() {
-    const W = window.innerWidth, H = window.innerHeight, s = homeScale();
-    return { W, H, s, top: H / 2 + Math.min(ABOVE_HOME, END_DISTANCE) * s };
+    const zoom = browserZoom();
+    const screenW = window.innerWidth, screenH = window.innerHeight;
+    const W = Math.round(screenW * zoom), H = Math.round(screenH * zoom), s = homeScale();
+    return { W, H, screenW, screenH, s, top: H / 2 + Math.min(ABOVE_HOME, END_DISTANCE) * s };
+  }
+  // Lay the page out for the size readGeometry() gives, before anything is
+  // measured: its width, the 1vw sizes go by, and the narrow-screen styles.
+  function applyZoomPicture() {
+    const zoom = browserZoom();
+    const html = document.documentElement;
+    const W = Math.round(window.innerWidth * zoom);
+    html.classList.toggle('zoom-picture', zoom > 1);
+    html.classList.toggle('wider-than-640', zoom > 1 && W > 640);
+    html.classList.toggle('wider-than-480', zoom > 1 && W > 480);
+    if (zoom > 1) {
+      rootStyle.setProperty('--vw', W / 100 + 'px');
+      viewport.style.width = W + 'px';
+    } else {
+      rootStyle.removeProperty('--vw');
+      viewport.style.width = '';
+    }
   }
   // Scroll position that puts the main menu in the middle of the screen.
   function readHomeTop() {
-    return readGeo ? readGeo.top - readGeo.H / 2 : 0;
+    return readGeo ? readGeo.top - readGeo.screenH / 2 : 0;
   }
 
   function buildReadPage() {
@@ -2146,6 +2175,9 @@ function startGallery() {
     const anchor = before && sectionEls.find((el) => el.offsetTop + el.offsetHeight > window.scrollY);
     const anchorOffset = anchor ? window.scrollY - anchor.offsetTop : 0;
     const pastHome = before && window.scrollY > readHomeTop() + 1;
+    // What's in the middle of the screen across, in landscape units, to keep
+    // there when the page is zoomed (it only scrolls sideways when zoomed).
+    const worldAtMiddle = before ? (window.scrollX + before.screenW / 2 - before.W / 2) / before.s : 0;
     const g = readGeo = readGeometry();
     cam.s = g.s;
     cam.x = 0;
@@ -2182,10 +2214,13 @@ function startGallery() {
     }
     stats.mode = 'read mode: normal page scrolling';
     // Keep the same part of the page on screen when the window is resized.
+    const left = Math.max(0, g.W / 2 + worldAtMiddle * g.s - g.screenW / 2);
     if (anchor && pastHome) {
-      window.scrollTo({ top: anchor.offsetTop + anchorOffset, behavior: 'instant' });
+      window.scrollTo({ left, top: anchor.offsetTop + anchorOffset, behavior: 'instant' });
     } else if (worldAtTop !== null) {
-      window.scrollTo({ top: g.top + worldAtTop * g.s, behavior: 'instant' });
+      window.scrollTo({ left, top: g.top + worldAtTop * g.s, behavior: 'instant' });
+    } else {
+      window.scrollTo({ left, top: window.scrollY, behavior: 'instant' });
     }
     readFrame();
   }
@@ -2429,12 +2464,12 @@ function startGallery() {
   function readFrame() {
     if (!readGeo) return;
     const g = readGeo;
-    const originY = g.top - window.scrollY;
-    cam.y = (window.scrollY + g.H / 2 - g.top) / g.s;
-    updateQuickNav(g.W / 2, originY, g.s, g.W, g.H);
+    const originX = g.W / 2 - window.scrollX, originY = g.top - window.scrollY;
+    cam.y = (window.scrollY + g.screenH / 2 - g.top) / g.s;
+    updateQuickNav(originX, originY, g.s, g.screenW, g.screenH);
     if (GRID_ON) {
       const c = prepareCanvas(gridCanvas, gridCtx, window.devicePixelRatio || 1);
-      paintGrid(gridCtx, c.w, c.h, g.W / 2, originY, g.s);
+      paintGrid(gridCtx, c.w, c.h, originX, originY, g.s);
     }
     if (perfOn) {
       const t = performance.now();
@@ -2669,6 +2704,7 @@ function startGallery() {
   }
 
   // ---- Start --------------------------------------------------------------
+  if (READ_MODE) applyZoomPicture();
   measureMenu();
   if (READ_MODE) {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -2682,6 +2718,9 @@ function startGallery() {
     }, { passive: true });
     let resizeTimer = 0;
     window.addEventListener('resize', () => {
+      // Straight away, before the browser draws the zoomed page: otherwise
+      // the text rewraps to the narrower window for a moment first.
+      applyZoomPicture();
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => { liftMenu(); measureMenu(); buildReadPage(); }, 150);
     });

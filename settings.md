@@ -380,9 +380,11 @@ small screen the home page shrinks a little so the menu fits; browser zoom
 makes the page look smaller to the site too, so without this, zooming in
 past about 140% would be undone by that shrinking.
 
-- `true` = browser zoom works: the photos, menu and words get bigger as you
-  zoom in, the way they do on any other site. Small screens (phones, narrow
-  windows) still shrink to fit.
+- `true` = browser zoom works like zooming into a picture: the whole page
+  gets bigger as one piece, exactly as it is at 100%, so no photo moves,
+  rearranges or fades and no text rewraps. Zoomed in, the page is wider
+  than the window and scrolls sideways too. Small screens (phones, narrow
+  windows) aren't zoomed, so they still shrink to fit as before.
 - `false` = the old way: the page shrinks to keep the menu on screen however
   far the browser is zoomed in.
 

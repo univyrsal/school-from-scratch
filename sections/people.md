@@ -1,5 +1,5 @@
 ## Gopal Krishnamurthy, PhD
-![Headshot of Gopal Krishnamurthy](assets/gopal_headshot.jpeg)
+![Headshot of Gopal](assets/gopal_headshot.jpeg)
 Founding Director/Teacher, TEC, and Director/Teacher, The School From Scratch.
 
 Gopal brings decades of experience in schools, universities, teacher education, and education in India, the UK, and the US. He has a PhD in education, and served as university Dept. Chair \& faculty, school director, and teacher. He sees Ojai as a crucible for wonder, not knowing, and deep inquiry.
@@ -17,7 +17,7 @@ Child safety is a priority at The School From Scratch and teachers have backgrou
 Sunsong (Susan) Clark (director, teacher, and safeguarding lead), served for years as government mandated residential ***school safeguarding lead*** and ***conducted child protection training*** for staff and teachers.
 
 ## Amol Gejawar
-![Headshot of Sunsong](assets/amol_headshot.jpeg)
+![Headshot of Amol](assets/amol_headshot.jpeg)
 Founding Director/Teacher, The School From Scratch.
 
 Twelve years of expertise in natural learning, ecological restoration, organic farming, alternative architecture, and traditional craftsmanship, have cultivated Amol's diverse and impactful career. His commitment to sustainability and community-focused initiatives continues to drive his work in these interconnected domains. He holds a Bachelors in Engineering. Amol brings years of experience in educational leadership, and the observation and education of children.

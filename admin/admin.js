@@ -828,7 +828,7 @@
     const orderActions = el('div', { class: 'actions', hidden: true },
       el('button', { type: 'button', class: 'button', text: 'Undo', onclick: () => { order = saved(); draw(); } }),
       el('button', { type: 'button', class: 'button primary', text: 'Review & save the new order', onclick: () => askOrder() }));
-    const nameBox = el('input', { type: 'text', id: 'new-section-name', maxlength: '40', placeholder: 'For example: Garden Days', autocomplete: 'off' });
+    const nameBox = el('input', { type: 'text', id: 'new-section-name', maxlength: '40', autocomplete: 'off' });
     const addButton = el('button', { type: 'button', class: 'button primary', text: 'Add section' });
     const addProblem = el('p', { class: 'problem', role: 'alert' });
     section.append(

@@ -1376,6 +1376,13 @@ What the settings are called in the admin's menu.
 ADMIN_SETTINGS_LABEL = "Settings"
 ```
 
+What the home page's menu is called in the admin's menu. That section
+puts the options in order, adds new sections and deletes them.
+
+```js
+ADMIN_MENU_LABEL = "Menu"
+```
+
 What the gallery's photos are called in the admin's menu. That section
 shows every photo in PHOTOS as a picture, to add new ones or remove them.
 

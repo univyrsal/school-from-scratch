@@ -40,6 +40,7 @@
   let values = {};             // setting name -> value as saved on GitHub
   let options = [];            // [{ label, id, file, page }] in menu order
   let sectionEls = [];
+  let sitePaths = new Set();   // every file on the site, so new pictures get names of their own
 
   // A setting's saved value, or the fallback when it's missing or the wrong
   // kind of thing (the same rule as setting() in index.html).
@@ -219,7 +220,11 @@
       const page = parts.length === 3 && parts[1] === name ? name + '.html' : '';
       add(words.replace(/\b\w/g, (c) => c.toUpperCase()), path, page);
     }
-    // The gallery's photos, then the settings.
+    // The menu itself (order, new sections, deleting them), the gallery's
+    // photos, then the settings.
+    if (settingsFile && settingsFile.settings.some((s) => s.name === 'MENU_ITEMS' && s.kind === 'list')) {
+      list.push({ label: String(setting('ADMIN_MENU_LABEL', 'Menu')).trim() || 'Menu', file: 'menu', page: '' });
+    }
     if (settingsFile && settingsFile.settings.some((s) => s.name === 'PHOTOS')) {
       list.push({ label: String(setting('ADMIN_PHOTOS_LABEL', 'Photos')).trim() || 'Photos', file: 'photos', page: '' });
     }
@@ -241,7 +246,9 @@
   const fillIn = (text) => text.replace(/\{([A-Z][A-Z0-9_]*)\}/g, (all, name) =>
     (typeof values[name] === 'string' || typeof values[name] === 'number' ? String(values[name]) : all));
 
-  function renderInto(box, text, option) {
+  // (pending: pictures added in the editor and not saved yet, by their
+  // address, "assets/garden_day.jpg" -> a picture of it from this visit.)
+  function renderInto(box, text, option, pending) {
     const words = option.page ? fillIn(text) : text;
     if (!words.trim()) {
       box.innerHTML = '<p class="status">Under Development</p>';
@@ -254,7 +261,9 @@
     for (const node of box.querySelectorAll('[src], a[href]')) {
       const attr = node.hasAttribute('src') ? 'src' : 'href';
       const value = node.getAttribute(attr);
-      if (value && !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(value)) node.setAttribute(attr, '/' + value.replace(/^\.\//, ''));
+      if (pending && attr === 'src' && pending.has(value.replace(/^\.\//, ''))) {
+        node.setAttribute('src', pending.get(value.replace(/^\.\//, '')).preview);
+      } else if (value && !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(value)) node.setAttribute(attr, '/' + value.replace(/^\.\//, ''));
     }
     // A link opens in a new tab, so nothing typed here is lost by clicking it.
     for (const a of box.querySelectorAll('a[href]')) {
@@ -341,6 +350,10 @@
     const preview = el('div', { class: 'preview page-text' + look });
     const cancel = el('button', { type: 'button', class: 'button', text: 'Cancel' });
     const review = el('button', { type: 'button', class: 'button primary', text: 'Review & save' });
+    // Pictures put into the words while editing, saved along with them.
+    const pending = new Map();
+    const pictureChooser = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', multiple: true, hidden: true });
+    const pictureButton = el('button', { type: 'button', class: 'button', text: 'Add a picture', onclick: () => pictureChooser.click() });
     const editor = el('div', { class: 'editor', hidden: true },
       el('div', { class: 'edit-panes' },
         el('div', {}, el('label', { class: 'pane-label', text: 'Words' }), textBox),
@@ -348,7 +361,7 @@
       el('p', { class: 'edit-help', html:
         'Every way to format the words — bold, lists, headings, centering and more — is in the ' +
         '<a href="#formatting">formatting key</a> at the top of this page.' }),
-      el('div', { class: 'actions' }, cancel, review));
+      el('div', { class: 'actions' }, pictureButton, pictureChooser, cancel, review));
 
     const show = () => renderInto(view, files.get(option.file).text, option);
     show();
@@ -356,8 +369,8 @@
     let queued = 0;
     const refreshPreview = () => {
       cancelAnimationFrame(queued);
-      queued = requestAnimationFrame(() => renderInto(preview, textBox.value, option));
-      const changed = textBox.value.replace(/\r\n?/g, '\n') !== files.get(option.file).text;
+      queued = requestAnimationFrame(() => renderInto(preview, textBox.value, option, pending));
+      const changed = textBox.value.replace(/\r\n?/g, '\n') !== files.get(option.file).text || picturesInUse().length > 0;
       review.disabled = !changed;
       if (changed) unsaved.add(option.file); else unsaved.delete(option.file);
     };
@@ -380,9 +393,38 @@
       view.hidden = false;
       viewActions.hidden = false;
       unsaved.delete(option.file);
+      for (const p of pending.values()) URL.revokeObjectURL(p.preview);
+      pending.clear();
       show();
     };
     editButton.addEventListener('click', open);
+
+    // The pictures added while editing that the words still show.
+    const picturesInUse = () => [...pending.values()].filter((p) => textBox.value.includes('(' + p.path + ')'));
+    pictureChooser.addEventListener('change', async () => {
+      const chosen = [...pictureChooser.files];
+      pictureChooser.value = '';
+      const problems = [];
+      let insert = '';
+      for (const file of chosen) {
+        try {
+          const p = await preparePicture(file, (name) => sitePaths.has(photoFolder() + name) || [...pending.values()].some((q) => q.name === name));
+          pending.set(p.path, p);
+          insert += `![${photoTitle(p.name)}](${p.path})\n`;
+        } catch (e) {
+          problems.push(`${file.name}: ${e.message}`);
+        }
+      }
+      if (problems.length) toast(problems.join(' '));
+      if (!insert) return;
+      // On a line of its own, where the cursor is.
+      const at = textBox.selectionStart, value = textBox.value;
+      const before = value.slice(0, at), after = value.slice(textBox.selectionEnd);
+      const text = (before && !before.endsWith('\n') ? '\n' : '') + insert + (after && !after.startsWith('\n') ? '\n' : '');
+      textBox.focus();
+      textBox.setRangeText(text, at, textBox.selectionEnd, 'end');
+      refreshPreview();
+    });
     cancel.addEventListener('click', () => {
       if (unsaved.has(option.file) && !confirm('Throw away the changes you made to ' + option.label + '?')) return;
       close();
@@ -398,9 +440,11 @@
           const done = await call('/admin/api/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: option.file, sha: files.get(option.file).sha, text: after }),
+            body: JSON.stringify({ path: option.file, sha: files.get(option.file).sha, text: after,
+              pictures: picturesInUse().map((p) => ({ name: p.name, data: p.data })) }),
           });
-          files.set(option.file, { ...files.get(option.file), sha: done.sha, text: after });
+          for (const p of picturesInUse()) sitePaths.add(p.path);
+          files.set(option.file, { ...files.get(option.file), sha: done.sha, text: done.text !== undefined ? done.text : after });
           close();
           return done.message;
         },
@@ -526,8 +570,17 @@
 
     // The gallery's photos have a section of their own, with the pictures;
     // here is just where to find it, so they're changed in one place only.
-    const kind = entry.name === 'PHOTOS' && entry.kind === 'list' ? 'photos' : entry.kind;
+    // The menu's options likewise have a section of their own, which keeps
+    // each section's words and page file in step with the list.
+    const kind = entry.name === 'PHOTOS' && entry.kind === 'list' ? 'photos'
+      : entry.name === 'MENU_ITEMS' && entry.kind === 'list' ? 'menu' : entry.kind;
     switch (kind) {
+      case 'menu': {
+        const menuOption = options.find((o) => o.file === 'menu');
+        control.append(el('p', { class: 'hint' }, entry.value.join(', ') + '. Reorder, add or delete them in ',
+          el('a', { href: '#' + (menuOption ? menuOption.id : 'menu'), text: menuOption ? menuOption.label : 'Menu' }), '.'));
+        break;
+      }
       case 'photos': {
         const photosOption = options.find((o) => o.file === 'photos');
         const note = el('p', { class: 'hint' });
@@ -759,6 +812,151 @@
     return item;
   }
 
+  // ---- The menu section ------------------------------------------------------
+
+  // The home page's menu (MENU_ITEMS): move options up and down, add a new
+  // section, or delete one. A new order is saved like any setting; adding and
+  // deleting go through /admin/api/sections, which keeps each section's words
+  // and page file in step with the menu. The admin reloads afterwards, since
+  // its own menu and sections follow the site's.
+
+  function buildMenuSection(option) {
+    const section = el('section', { class: 'section menu-section', id: option.id });
+    const saved = () => setting('MENU_ITEMS', []).map(String);
+    let order = saved();
+    const list = el('ol', { class: 'menu-order' });
+    const orderActions = el('div', { class: 'actions', hidden: true },
+      el('button', { type: 'button', class: 'button', text: 'Undo', onclick: () => { order = saved(); draw(); } }),
+      el('button', { type: 'button', class: 'button primary', text: 'Review & save the new order', onclick: () => askOrder() }));
+    const nameBox = el('input', { type: 'text', id: 'new-section-name', maxlength: '40', placeholder: 'For example: Garden Days', autocomplete: 'off' });
+    const addButton = el('button', { type: 'button', class: 'button primary', text: 'Add section' });
+    const addProblem = el('p', { class: 'problem', role: 'alert' });
+    section.append(
+      el('h2', { text: option.label }),
+      el('p', { class: 'file-note', text: 'The menu on the home page, top to bottom' }),
+      el('p', { class: 'settings-intro', text: 'Move a section up or down with the arrows, then save the new order. Add a new section at the bottom, or delete one. You\'ll see exactly what will change before anything is saved.' }),
+      list,
+      orderActions,
+      el('div', { class: 'add-section' },
+        el('label', { for: 'new-section-name', class: 'setting-label', text: 'Add a new section' }),
+        el('div', { class: 'add-section-row' }, nameBox, addButton),
+        addProblem,
+        el('p', { class: 'hint', text: 'It goes at the bottom of the menu and shows "Under Development" until you write its words.' })));
+
+    const links = setting('MENU_LINKS', {});
+    const optionFor = (name) => options.find((o) => o.label === name);
+    const move = (i, by) => {
+      const j = i + by;
+      if (j < 0 || j >= order.length) return;
+      [order[i], order[j]] = [order[j], order[i]];
+      draw();
+      // Keep the moved option's arrow under the pointer.
+      const button = list.children[j] && list.children[j].querySelector(by < 0 ? '.move-up' : '.move-down');
+      if (button && !button.disabled) button.focus();
+    };
+    function draw() {
+      const changed = !sameJson(order, saved());
+      orderActions.hidden = !changed;
+      section.classList.toggle('changed', changed);
+      if (changed) unsaved.add('menu-order'); else unsaved.delete('menu-order');
+      list.replaceChildren(...order.map((name, i) => {
+        const own = links[name];
+        return el('li', { class: 'menu-row' + (saved()[i] === name ? '' : ' moved') },
+          el('span', { class: 'menu-name', text: name }),
+          el('span', { class: 'menu-kind', text: own ? `Opens ${own}` : 'Section' }),
+          el('span', { class: 'menu-buttons' },
+            el('button', { type: 'button', class: 'button icon move-up', 'aria-label': `Move ${name} up`, title: 'Move up', text: '↑', disabled: i === 0, onclick: () => move(i, -1) }),
+            el('button', { type: 'button', class: 'button icon move-down', 'aria-label': `Move ${name} down`, title: 'Move down', text: '↓', disabled: i === order.length - 1, onclick: () => move(i, 1) }),
+            own ? null : el('button', { type: 'button', class: 'button menu-delete', text: 'Delete', onclick: () => askDelete(name) })));
+      }));
+    }
+    draw();
+
+    function askOrder() {
+      const before = saved();
+      openReview({
+        title: 'Save the new menu order?',
+        intro: 'The menu on the home page will read top to bottom like this. The website shows it in about a minute.',
+        body: el('ol', { class: 'change-order' }, ...order.map((name, i) => el('li', { class: before[i] === name ? '' : 'moved' },
+          name, before[i] === name ? null : el('span', { class: 'was', text: ` (was ${ordinal(before.indexOf(name) + 1)})` })))),
+        save: async () => {
+          const done = await call('/admin/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: 'settings.md', sha: settingsFile.sha, changes: { MENU_ITEMS: order } }),
+          });
+          unsaved.delete('menu-order');
+          return reloadWith('The new menu order is saved. The website will show it in about a minute.', done.message);
+        },
+      });
+    }
+
+    addButton.addEventListener('click', () => {
+      const name = nameBox.value.trim().replace(/\s+/g, ' ');
+      addProblem.textContent = '';
+      const taken = [...saved(), ...setting('TOP_MENU_EXTRA_ITEMS', []), ...Object.keys(links)].find((o) => pageSlug(o) === pageSlug(name));
+      if (!name) addProblem.textContent = 'Give the new section a name first.';
+      else if (/["\\<>`]/.test(name)) addProblem.textContent = 'A section\'s name can\'t have " \\ < > or ` in it.';
+      else if (!pageSlug(name)) addProblem.textContent = 'The name needs at least one letter or number in it.';
+      else if (taken) addProblem.textContent = `There's already a menu option called "${taken}".`;
+      if (addProblem.textContent) return;
+      openReview({
+        title: `Add the section "${name}"?`,
+        intro: 'It goes at the bottom of the menu, with a section of its own further down the home page. The website shows it in about a minute.',
+        body: el('ul', { class: 'change-list' },
+          el('li', { text: `"${name}" is added to the bottom of the menu.` }),
+          el('li', { text: 'Its section shows "Under Development" until you write its words: open it from the menu here and choose Edit.' })),
+        save: async () => {
+          await call('/admin/api/sections', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add', name }),
+          });
+          nameBox.value = '';
+          return reloadWith(`"${name}" is added. Write its words in its section here; the website will show it in about a minute.`, null, pageSlug(name));
+        },
+      });
+    });
+    nameBox.addEventListener('keydown', (e) => { if (e.key === 'Enter') addButton.click(); });
+
+    function askDelete(name) {
+      const found = optionFor(name);
+      const words = el('div', { class: 'view page-text delete-preview' });
+      if (found && files.has(found.file)) renderInto(words, files.get(found.file).text, found);
+      openReview({
+        title: `Delete the section "${name}"?`,
+        intro: 'It leaves the menu, and its words (below) are deleted with it. If it was a mistake, Maxwell can bring it back from the website\'s history.',
+        body: words,
+        save: async () => {
+          await call('/admin/api/sections', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove', name }),
+          });
+          return reloadWith(`"${name}" is deleted. The website will show the change in about a minute.`);
+        },
+      });
+    }
+    return section;
+  }
+
+  const ordinal = (n) => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+
+  // After the menu changes, the admin reloads to follow it, and says what
+  // happened once it's back. If anything else is still unsaved, it doesn't
+  // reload (that would lose it) and says to reload later instead.
+  function reloadWith(message, fallback, hash) {
+    if (unsaved.size) {
+      return message + ' Reload the admin once your other changes are saved, to see the new menu here.';
+    }
+    try { sessionStorage.setItem('admin-toast', message); } catch (e) { /* no message after the reload */ }
+    setTimeout(() => {
+      if (hash) location.hash = hash;
+      location.reload();
+    }, 50);
+    return fallback || message;
+  }
+
   // ---- The photos section ----------------------------------------------------
 
   // Every photo in the home page's gallery (PHOTOS), each shown as a picture
@@ -948,6 +1146,56 @@
       small: await base64Of(smallBlob),
       preview: URL.createObjectURL(smallBlob),
     };
+  }
+
+  // A picture for a page's words. Pictures in the words are shown a few
+  // hundred pixels across at most, so a big camera photo is made smaller
+  // (longest side PICTURE_MOST_SIDE, as a JPEG) before it's sent; one that's
+  // already small enough goes as it is. Its name is the file's, tidied, with
+  // a number added if that's taken (taken(name) says).
+  const PICTURE_MOST_SIDE = 1600;
+  async function preparePicture(file, taken) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      throw new Error(/heic|heif/i.test(file.type + file.name)
+        ? 'iPhone (HEIC) pictures can\'t be shown on websites; save it as a JPEG first.'
+        : 'only JPEG, PNG and WebP pictures can be added.');
+    }
+    if (file.size > PHOTO_MOST_MB * 1048576) throw new Error(`it's ${(file.size / 1048576).toFixed(1)} MB; the most is ${PHOTO_MOST_MB} MB.`);
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (e) {
+      throw new Error('it couldn\'t be opened as a picture.');
+    }
+    let blob = file, type = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type];
+    if (Math.max(bitmap.width, bitmap.height) > PICTURE_MOST_SIDE || file.size > 2 * 1048576) {
+      const scale = Math.min(1, PICTURE_MOST_SIDE / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+      type = 'jpg';
+    }
+    bitmap.close();
+    let name = cleanName(file.name, type);
+    if (taken(name)) {
+      const base = name.replace(/\.[^.]+$/, '');
+      for (let n = 2; ; n++) if (!taken(`${base}_${n}.${type}`)) { name = `${base}_${n}.${type}`; break; }
+    }
+    return { name, path: photoFolder() + name, data: await base64Of(blob), preview: URL.createObjectURL(blob) };
+  }
+
+  // Same as cleanName() in functions/admin/api/_commit.js:
+  // "IMG 2041 (1).JPG" -> "img_2041_1.jpg".
+  function cleanName(name, type) {
+    const base = String(name || '').replace(/\.[^.]*$/, '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'photo';
+    return `${base}.${type}`;
   }
 
   function base64Of(blob) {
@@ -1171,6 +1419,26 @@
     // Shown once the menu has scrolled out of view.
     const bar = $('#quick-nav');
     new IntersectionObserver(([e]) => bar.classList.toggle('show', !e.isIntersecting)).observe(nav);
+
+    // The options wrap onto more lines when they don't fit across. Each keeps
+    // the room its letters need when spread out on hover, so hovering never
+    // moves a word onto another line; and the bar's height (one line or
+    // more) is what a section's heading is kept clear of.
+    const list = $('#quick-list');
+    const reserveHoverRoom = () => {
+      const links = [...list.querySelectorAll('a')];
+      links.forEach((a) => a.style.removeProperty('--hover-width'));
+      list.classList.add('measuring-hover');
+      // (+4: a little spare, as the browser rounds widths differently mid-hover.)
+      const widths = links.map((a) => Math.ceil(a.getBoundingClientRect().width) + 4);
+      list.classList.remove('measuring-hover');
+      links.forEach((a, i) => a.style.setProperty('--hover-width', widths[i] + 'px'));
+    };
+    reserveHoverRoom();
+    if (document.fonts) document.fonts.ready.then(reserveHoverRoom);
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--bar-height', bar.offsetHeight + 'px');
+    }).observe(bar);
   }
 
   // ---- Gliding to a section (as on the home page) ------------------------------
@@ -1279,6 +1547,7 @@
       return;
     }
     for (const f of data.files) files.set(f.path, f);
+    sitePaths = new Set(data.paths || []);
     settingsFile = files.get('settings.md') || null;
     values = settingsFile ? Object.fromEntries(settingsFile.settings.map((s) => [s.name, s.value])) : {};
 
@@ -1287,10 +1556,17 @@
     readLetterSettings();
     options = workOutOptions();
     sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o)
-      : o.file === 'photos' ? buildPhotosSection(o) : buildPageSection(o)));
+      : o.file === 'photos' ? buildPhotosSection(o)
+      : o.file === 'menu' ? buildMenuSection(o) : buildPageSection(o)));
     $('#sections').replaceChildren(buildKey(), ...sectionEls);
     buildMenus();
     status.textContent = '';
+    // A message saved just before the admin reloaded itself (after the menu
+    // changed), shown now that it's back.
+    try {
+      const after = sessionStorage.getItem('admin-toast');
+      if (after) { sessionStorage.removeItem('admin-toast'); toast(after); }
+    } catch (e) { /* storage blocked: no message, nothing else lost */ }
     if (location.hash) {
       scrollToHash(false);
       if (document.fonts) document.fonts.ready.then(() => scrollToHash(false));

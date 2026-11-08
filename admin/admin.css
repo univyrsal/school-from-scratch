@@ -28,7 +28,8 @@
 }
 
 html {
-  scroll-padding-top: var(--top-menu-height, 64px);
+  /* The bar's real height: taller when its options wrap onto more lines. */
+  scroll-padding-top: var(--bar-height, var(--top-menu-height, 64px));
 }
 body {
   margin: 0;
@@ -145,7 +146,9 @@ body {
   top: 0;
   right: 0;
   z-index: 5;
-  height: var(--top-menu-height, 64px);
+  /* At least TOP_MENU_HEIGHT; taller when the options need more than one
+     line. */
+  min-height: var(--top-menu-height, 64px);
   background: var(--accent);
   transform: translateY(-100%);
   visibility: hidden;
@@ -159,21 +162,26 @@ body {
 }
 .no-top-menu-animation #quick-nav,
 .no-top-menu-animation #quick-nav.show { transition: none; }
+/* The options wrap onto a second line when they don't all fit across, so
+   every one is always in view. */
 #quick-list {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: safe center;
-  height: 100%;
-  padding: 0 8px;
+  justify-content: center;
+  min-height: var(--top-menu-height, 64px);
+  padding: 6px 8px;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
 }
 #quick-list::-webkit-scrollbar { display: none; }
 #quick-list a {
   flex: none;
   position: relative;
+  /* Room for the wider letters on hover is kept (admin.js sets it), so a
+     hovered word never pushes another onto the next line. */
+  min-width: var(--hover-width, auto);
+  box-sizing: border-box;
+  text-align: center;
   padding: 8px 14px;
   color: var(--fg);
   font-size: var(--top-menu-text-size, 17px);
@@ -871,3 +879,44 @@ body {
 .photo-big .photo-frame { aspect-ratio: auto; max-height: 60vh; padding: 12px; }
 .photo-big .photo-frame img { max-height: calc(60vh - 24px); }
 .review-photos { margin-top: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+
+/* Only for a moment, while admin.js measures how wide each option in the
+   bar is with its letters spread out as on hover. */
+#quick-list.measuring-hover a {
+  transition: none;
+  letter-spacing: var(--top-menu-hover-spacing, 0.3em);
+  text-indent: var(--top-menu-hover-spacing, 0.3em);
+}
+
+/* ---- Menu ------------------------------------------------------------------- */
+
+/* The menu's options in order, each with arrows to move it and Delete. */
+.menu-order { list-style: none; margin: 24px 0 0; padding: 0; counter-reset: menu; }
+.menu-row {
+  counter-increment: menu;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.menu-row::before { content: counter(menu); min-width: 1.4em; color: var(--quiet); font-size: 15px; }
+.menu-row.moved { background: color-mix(in srgb, var(--accent) 45%, var(--bg)); }
+.menu-name { flex: 1; font-weight: 600; }
+.menu-kind { font-size: 14px; color: var(--quiet); }
+.menu-buttons { display: flex; gap: 6px; }
+.button.icon { min-height: 36px; width: 40px; padding: 0; font-size: 18px; }
+.menu-delete { min-height: 36px; padding: 0 16px; font-size: 14px; }
+.menu-section > .actions { margin-top: 16px; }
+.add-section { margin-top: 40px; }
+.add-section-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.add-section-row input { flex: 1; min-width: 200px; min-height: 44px; padding: 0 14px; font: inherit; font-size: 17px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); box-sizing: border-box; }
+/* In the dialog: the new order, and the words of a section about to go. */
+.change-order { margin: 0; padding-left: 1.6em; }
+.change-order li { padding: 3px 6px; }
+.change-order li.moved { background: var(--added); border-radius: 6px; }
+.change-order .was { color: var(--quiet); font-size: 0.9em; }
+.delete-preview { max-height: 50vh; overflow: auto; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--removed); font-size: 16px; }
+.add-section .hint { margin: 6px 0 0; font-size: 13.5px; color: var(--quiet); }
+.add-section .problem { margin: 6px 0 0; font-size: 14px; color: var(--warn); }
+.add-section .problem:empty { display: none; }

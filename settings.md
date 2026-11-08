@@ -1375,3 +1375,10 @@ What the settings are called in the admin's menu.
 ```js
 ADMIN_SETTINGS_LABEL = "Settings"
 ```
+
+What the gallery's photos are called in the admin's menu. That section
+shows every photo in PHOTOS as a picture, to add new ones or remove them.
+
+```js
+ADMIN_PHOTOS_LABEL = "Photos"
+```

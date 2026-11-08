@@ -219,6 +219,10 @@
       const page = parts.length === 3 && parts[1] === name ? name + '.html' : '';
       add(words.replace(/\b\w/g, (c) => c.toUpperCase()), path, page);
     }
+    // The gallery's photos, then the settings.
+    if (settingsFile && settingsFile.settings.some((s) => s.name === 'PHOTOS')) {
+      list.push({ label: String(setting('ADMIN_PHOTOS_LABEL', 'Photos')).trim() || 'Photos', file: 'photos', page: '' });
+    }
     if (settingsFile) list.push({ label: String(setting('ADMIN_SETTINGS_LABEL', 'Settings')).trim() || 'Settings', file: 'settings.md', page: '' });
     // Each gets its own address on this page (#people), never repeated.
     const ids = new Set(['home', 'menu', 'sections', 'review', 'toast']);
@@ -520,7 +524,21 @@
     let reset = () => {};
     const input = (props) => el('input', { id, ...props });
 
-    switch (entry.kind) {
+    // The gallery's photos have a section of their own, with the pictures;
+    // here is just where to find it, so they're changed in one place only.
+    const kind = entry.name === 'PHOTOS' && entry.kind === 'list' ? 'photos' : entry.kind;
+    switch (kind) {
+      case 'photos': {
+        const photosOption = options.find((o) => o.file === 'photos');
+        const note = el('p', { class: 'hint' });
+        control.append(note);
+        reset = () => {
+          note.replaceChildren(`${entry.value.length} photo${entry.value.length === 1 ? '' : 's'}. Add or remove them in `,
+            el('a', { href: '#' + (photosOption ? photosOption.id : 'photos'), text: photosOption ? photosOption.label : 'Photos' }),
+            ', where each one is shown.');
+        };
+        break;
+      }
       case 'toggle': {
         const box = input({ type: 'checkbox' });
         const word = el('span');
@@ -739,6 +757,206 @@
         el('span', { class: 'new' }, swatch(value), shown(value))));
     }
     return item;
+  }
+
+  // ---- The photos section ----------------------------------------------------
+
+  // Every photo in the home page's gallery (PHOTOS), each shown as a picture
+  // with its name under it, so it's plain which one is which. Photos are added
+  // and removed here, and each change is saved straight away (after a look at
+  // what's about to happen) through /admin/api/photos.
+
+  const PHOTO_SMALL_SIDE = 900;   // the small copy's longest side, as tools/make-small-photos.js
+  const PHOTO_MOST_MB = 20;       // as MOST_BYTES in functions/admin/api/photos.js
+  const REPO_RAW = 'https://raw.githubusercontent.com/univyrsal/school-from-scratch/main/';
+  const justAdded = new Map();    // file -> a picture of it from this visit, until the site catches up
+  let photoGrid = null;
+
+  const photoFolder = () => folderName(setting('PHOTO_FOLDER', 'assets/'));
+  const smallFolder = () => folderName(setting('PHOTO_SMALL_FOLDER', ''));
+  function folderName(f) {
+    f = String(f || '').trim().replace(/^\.?\//, '');
+    return f && !f.endsWith('/') ? f + '/' : f;
+  }
+  // "children_on_an_oak_tree.jpg" -> "Children on an oak tree"
+  const photoTitle = (file) => {
+    const words = file.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  };
+
+  // A picture of a gallery photo: the small copy the site loads, else the
+  // photo itself, else (for one saved a moment ago and not on the site yet)
+  // the copy on GitHub.
+  function photoImage(file) {
+    const img = el('img', { alt: photoTitle(file), loading: 'lazy', decoding: 'async' });
+    const tries = [];
+    if (justAdded.has(file)) tries.push(justAdded.get(file));
+    if (smallFolder()) tries.push('/' + smallFolder() + file.replace(/\.[^.]+$/, '.jpg'));
+    tries.push('/' + photoFolder() + file, REPO_RAW + photoFolder() + file);
+    let i = 0;
+    img.addEventListener('error', () => { if (++i < tries.length) img.src = tries[i]; });
+    img.src = tries[0];
+    return img;
+  }
+
+  function buildPhotosSection(option) {
+    const section = el('section', { class: 'section photos-section', id: option.id });
+    const picker = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', multiple: true, hidden: true });
+    const addButton = el('button', { type: 'button', class: 'button primary', text: 'Add photos' });
+    const count = el('p', { class: 'file-note' });
+    photoGrid = el('div', { class: 'photo-grid' });
+    section.append(
+      el('h2', { text: option.label }),
+      count,
+      el('p', { class: 'settings-intro', text: 'Every photo scattered around the home page. Add new ones with the button (or drop them anywhere on this section), or take one away with Remove under it. You\'ll see exactly what will change before anything is saved.' }),
+      el('div', { class: 'actions top-actions' }, addButton, picker),
+      photoGrid);
+
+    const draw = () => {
+      const photos = setting('PHOTOS', []);
+      count.textContent = `${photos.length} photo${photos.length === 1 ? '' : 's'} in the gallery`;
+      photoGrid.replaceChildren(...photos.map((file) => el('figure', { class: 'photo-card' },
+        el('div', { class: 'photo-frame' }, photoImage(file)),
+        el('figcaption', {},
+          el('span', { class: 'photo-name', text: photoTitle(file) }),
+          el('code', { text: file })),
+        el('button', { type: 'button', class: 'button photo-remove', text: 'Remove', onclick: () => askRemove(file) }))));
+    };
+    section._draw = draw;
+    draw();
+
+    addButton.addEventListener('click', () => picker.click());
+    picker.addEventListener('change', () => { askAdd([...picker.files]); picker.value = ''; });
+    // Dropping photos on the section adds them the same way.
+    section.addEventListener('dragover', (e) => {
+      if (![...e.dataTransfer.types].includes('Files')) return;
+      e.preventDefault();
+      section.classList.add('dropping');
+    });
+    section.addEventListener('dragleave', (e) => { if (!section.contains(e.relatedTarget)) section.classList.remove('dropping'); });
+    section.addEventListener('drop', (e) => {
+      if (![...e.dataTransfer.types].includes('Files')) return;
+      e.preventDefault();
+      section.classList.remove('dropping');
+      askAdd([...e.dataTransfer.files]);
+    });
+    return section;
+
+    // Shows the chosen photos, each with the name it will have, then saves
+    // them one at a time.
+    async function askAdd(chosen) {
+      if (!chosen.length) return;
+      const ready = [], problems = [];
+      for (const file of chosen) {
+        try { ready.push(await preparePhoto(file)); } catch (e) { problems.push(`${file.name}: ${e.message}`); }
+      }
+      if (!ready.length) { toast(problems.join(' ')); return; }
+      const list = el('div', { class: 'photo-grid review-photos' }, ...ready.map((p) => el('figure', { class: 'photo-card' },
+        el('div', { class: 'photo-frame' }, el('img', { src: p.preview, alt: '' })),
+        el('figcaption', {}, el('span', { class: 'photo-name', text: p.file.name })))));
+      const body = el('div', {}, list);
+      if (problems.length) body.prepend(el('p', { class: 'review-error', text: 'These can\'t be added: ' + problems.join(' ') }));
+      openReview({
+        title: `Add ${ready.length} photo${ready.length === 1 ? '' : 's'} to the gallery?`,
+        intro: 'They join the photos scattered around the home page. The website shows them in about a minute.',
+        body,
+        save: async () => {
+          let added = 0;
+          for (const p of ready) {
+            if (p.saved) continue;
+            $('#review-save').textContent = `Saving ${added + 1} of ${ready.length}…`;
+            const done = await call('/admin/api/photos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'add', name: p.file.name, photo: p.photo, small: p.small }),
+            });
+            p.saved = true;
+            added++;
+            justAdded.set(done.file, p.preview);
+            photosSaved(done);
+          }
+          return ready.length === 1 ? 'Photo added. The website will show it in about a minute.'
+            : `${ready.length} photos added. The website will show them in about a minute.`;
+        },
+      });
+    }
+
+    function askRemove(file) {
+      openReview({
+        title: 'Remove this photo from the gallery?',
+        intro: 'It will no longer appear on the home page. The website shows the change in about a minute.',
+        body: el('figure', { class: 'photo-card photo-big' },
+          el('div', { class: 'photo-frame' }, photoImage(file)),
+          el('figcaption', {}, el('span', { class: 'photo-name', text: photoTitle(file) }), el('code', { text: file }))),
+        save: async () => {
+          const done = await call('/admin/api/photos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove', file }),
+          });
+          photosSaved(done);
+          return done.kept
+            ? `Removed from the gallery. The file itself was kept, because ${done.usedBy === 'the settings' ? 'a setting' : done.usedBy} still uses it.`
+            : 'Photo removed. The website will show the change in about a minute.';
+        },
+      });
+    }
+  }
+
+  // After a photo is added or removed: settings.md has a new version and a new
+  // PHOTOS, so the settings form and the next settings save start from them.
+  function photosSaved(done) {
+    values.PHOTOS = done.photos;
+    if (done.settingsSha && settingsFile) settingsFile.sha = done.settingsSha;
+    const entry = settingsFile && settingsFile.settings.find((s) => s.name === 'PHOTOS');
+    if (entry) entry.value = done.photos;
+    const row = edits.get('PHOTOS');
+    if (row) row.reset();
+    const section = photoGrid && photoGrid.closest('section');
+    if (section) section._draw();
+  }
+
+  // A chosen file, read and checked, with a small copy made the way the site
+  // makes them (longest side 900, JPEG) and a preview for the dialog.
+  async function preparePhoto(file) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      throw new Error(/heic|heif/i.test(file.type + file.name)
+        ? 'iPhone (HEIC) photos can\'t be shown on websites; save it as a JPEG first.'
+        : 'only JPEG, PNG and WebP photos can be added.');
+    }
+    if (file.size > PHOTO_MOST_MB * 1048576) throw new Error(`it's ${(file.size / 1048576).toFixed(1)} MB; the most is ${PHOTO_MOST_MB} MB.`);
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (e) {
+      throw new Error('it couldn\'t be opened as a picture.');
+    }
+    const scale = Math.min(1, PHOTO_SMALL_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; // a see-through PNG gets white behind it, as JPEG can't be see-through
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const smallBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+    return {
+      file,
+      photo: await base64Of(file),
+      small: await base64Of(smallBlob),
+      preview: URL.createObjectURL(smallBlob),
+    };
+  }
+
+  function base64Of(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ''));
+      reader.onerror = () => reject(new Error('it couldn\'t be read.'));
+      reader.readAsDataURL(blob);
+    });
   }
 
   // ---- Showing what changed ---------------------------------------------------
@@ -1068,7 +1286,8 @@
     applyTitle();
     readLetterSettings();
     options = workOutOptions();
-    sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o) : buildPageSection(o)));
+    sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o)
+      : o.file === 'photos' ? buildPhotosSection(o) : buildPageSection(o)));
     $('#sections').replaceChildren(buildKey(), ...sectionEls);
     buildMenus();
     status.textContent = '';

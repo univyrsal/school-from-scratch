@@ -838,3 +838,36 @@ body {
   .key-row { grid-template-columns: 1fr; gap: 8px; }
   .key-head { display: none; }
 }
+
+/* ---- Photos ----------------------------------------------------------------- */
+
+/* The gallery's photos, each a picture with its name under it. Wider than a
+   page's words, so more fit across. */
+.section.photos-section { width: min(1100px, 100% - 32px); }
+.photos-section.dropping { outline: 2px dashed var(--fg); outline-offset: 12px; border-radius: 12px; }
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 22px;
+  margin-top: 28px;
+}
+.photo-card { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+/* The whole photo shows, never cropped, so it's plain which one it is. */
+.photo-frame {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+  overflow: hidden;
+}
+.photo-frame img { max-width: 100%; max-height: 100%; display: block; border-radius: 8px; }
+.photo-card figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.35; }
+.photo-name { font-weight: 600; }
+.photo-card figcaption code { font-size: 12px; color: var(--quiet); overflow-wrap: anywhere; }
+.photo-remove { min-height: 36px; padding: 0 16px; font-size: 14px; align-self: flex-start; margin-top: auto; }
+/* In the dialog: the photo being removed, big. */
+.photo-big .photo-frame { aspect-ratio: auto; max-height: 60vh; padding: 12px; }
+.photo-big .photo-frame img { max-height: calc(60vh - 24px); }
+.review-photos { margin-top: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }

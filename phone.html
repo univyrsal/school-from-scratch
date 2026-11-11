@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPhone preview</title>
+<!-- The website in an iPhone-sized frame, for testing on a computer
+     (PHONE_PREVIEW in settings.md; see phonepreview.js). The page in the
+     frame is the real site, at the phone's width and height, so it shows
+     everything an iPhone gets: the narrow layout, the phone menu and so on.
+     Shrunk to fit if the window is shorter than the phone. -->
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    overflow: hidden;
+    background: #d9d9d9;
+    color: #333333;
+    font: 13px/1.4 system-ui, 'Segoe UI', sans-serif;
+  }
+  #holder { position: relative; flex: none; }
+  #phone {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 0;
+    background: #ffffff;
+    transform-origin: 0 0;
+  }
+  #label { margin: 0; text-align: center; }
+</style>
+</head>
+<body>
+  <div id="holder"><iframe id="phone" name="phone-preview" title="The website on an iPhone"></iframe></div>
+  <p id="label"></p>
+<script>
+(() => {
+  const holder = document.getElementById('holder');
+  const phone = document.getElementById('phone');
+  const label = document.getElementById('label');
+  // The page to show: what's after the # (the page that sent us here).
+  const start = decodeURIComponent(location.hash.slice(1)) || '/';
+  let width = 390, height = 844, on = true;
+
+  const read = (code, name) => {
+    const m = new RegExp('^\\s*' + name + '\\s*=\\s*([^\\n]+)', 'm').exec(code);
+    return m ? m[1].trim() : null;
+  };
+  fetch('settings.md', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.text() : ''))
+    .catch(() => '')
+    .then((text) => {
+      const code = [...text.matchAll(/```js\r?\n([\s\S]*?)```/g)].map((m) => m[1]).join('\n');
+      const w = Number(read(code, 'PHONE_PREVIEW_WIDTH')), h = Number(read(code, 'PHONE_PREVIEW_HEIGHT'));
+      if (w >= 200) width = w;
+      if (h >= 200) height = h;
+      on = read(code, 'PHONE_PREVIEW') === 'true';
+      // Turned off: back to the page itself.
+      if (!on && text) { location.replace(start); return; }
+      phone.width = width;
+      phone.height = height;
+      fit();
+      phone.src = start;
+    });
+
+  // Shrunk (never enlarged) to fit the window, label included.
+  function fit() {
+    const scale = Math.min(1, (window.innerWidth - 32) / width, (window.innerHeight - 60) / height);
+    phone.style.transform = `scale(${scale})`;
+    holder.style.width = width * scale + 'px';
+    holder.style.height = height * scale + 'px';
+    label.textContent = `iPhone preview · ${width} × ${height}` + (Math.round(scale * 100) < 100 ? ` · shown at ${Math.round(scale * 100)}%` : '') + ' · PHONE_PREVIEW in settings.md';
+  }
+  window.addEventListener('resize', fit);
+
+  // Keep the address in step with the page in the frame, so a reload stays
+  // on the same page.
+  phone.addEventListener('load', () => {
+    try {
+      const inner = phone.contentWindow.location;
+      history.replaceState(null, '', '#' + encodeURIComponent(inner.pathname + inner.hash));
+      phone.contentWindow.addEventListener('hashchange', () => {
+        history.replaceState(null, '', '#' + encodeURIComponent(inner.pathname + inner.hash));
+      });
+      document.title = 'iPhone preview: ' + phone.contentDocument.title;
+    } catch (e) { /* another website */ }
+  });
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="phonepreview.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>The School From Scratch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2090,6 +2091,9 @@ function startGallery() {
   // such gap, and a browser that sizes both the same way reads as 1.
   function browserZoom() {
     if (!BROWSER_ZOOM_ENLARGES) return 1;
+    // In the phone preview (phone.html) the window is the computer's, not
+    // the phone-sized frame's, so the two widths say nothing about zoom.
+    if (window.name === 'phone-preview') return 1;
     const z = window.outerWidth / window.innerWidth;
     // Below 1.05 is a scrollbar or window border, not zoom (the smallest
     // zoom step is 110%).

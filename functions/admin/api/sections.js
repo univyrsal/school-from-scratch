@@ -125,6 +125,7 @@ function pageFile(name) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="phonepreview.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${h}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">

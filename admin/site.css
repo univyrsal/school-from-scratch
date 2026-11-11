@@ -38,13 +38,20 @@ body.site-editor > #settings-bar { display: none !important; }
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* The picture in assets/gear-icon-vector.svg, in the accent color with a
+   thin outline in the text color. */
 #gear svg {
+  display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
+}
+#gear svg path {
   fill: var(--accent);
   stroke: var(--fg);
-  stroke-width: 1.1;
+  stroke-width: 1.3px;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 #gear:hover { transform: rotate(30deg); }
 #gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
@@ -91,22 +98,6 @@ body.panel-open #gear { transform: rotate(60deg); }
 }
 .panel-tab:hover { border-color: var(--line); }
 .panel-tab.current { background: var(--accent); font-weight: 700; }
-.panel-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1.5px solid var(--line);
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--fg);
-  cursor: pointer;
-}
-.panel-close:hover { border-color: var(--fg); }
-.panel-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .panel-body {
   flex: 1;
   overflow-y: auto;
@@ -129,6 +120,26 @@ body.panel-open #gear { transform: rotate(60deg); }
   text-align: center;
 }
 .panel-foot a { color: var(--fg); }
+
+/* ---- "Click to edit", following the pointer ------------------------------------ */
+
+#hover-tag {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+#hover-tag[hidden] { display: none; }
 
 /* ---- Where something was clicked: what can be done with it ------------------ */
 

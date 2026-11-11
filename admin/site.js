@@ -74,12 +74,11 @@ window.startSiteEditor = function startSiteEditor(P) {
   // ---- The layout -------------------------------------------------------------
 
   const frame = el('iframe', { id: 'site-frame', title: 'The website, as it will look', src: '/' });
-  const gear = el('button', { type: 'button', id: 'gear', 'aria-label': 'Settings', title: 'Settings', html: gearIcon() });
+  const gear = el('button', { type: 'button', id: 'gear', 'aria-label': 'Settings', title: 'Settings' });
   const panelBody = el('div', { class: 'panel-body' });
   const tabs = el('nav', { class: 'panel-tabs', 'aria-label': 'Settings and more' });
   const panel = el('aside', { id: 'panel', hidden: true, 'aria-label': 'Settings' },
-    el('div', { class: 'panel-top' }, tabs,
-      el('button', { type: 'button', class: 'panel-close', 'aria-label': 'Close', title: 'Close', html: closeIcon(), onclick: () => closePanel() })),
+    el('div', { class: 'panel-top' }, tabs),
     panelBody,
     el('p', { class: 'panel-foot' },
       'Prefer the old layout? ',
@@ -95,27 +94,33 @@ window.startSiteEditor = function startSiteEditor(P) {
     publishWhat, publishDetails, publishError,
     el('div', { class: 'publish-actions' }, seeButton, discardButton, publishButton));
   const spot = el('div', { id: 'spot-menu', hidden: true, role: 'menu' });
-  document.body.append(frame, gear, panel, publish, spot);
+  // "Click to edit", following the pointer over anything that can be edited.
+  const hoverTag = el('div', { id: 'hover-tag', hidden: true, text: 'Click to edit', 'aria-hidden': 'true' });
+  document.body.append(frame, gear, panel, publish, spot, hoverTag);
 
-  // A gear with eight teeth, in the accent color with a dark outline so it
-  // shows up on the page and on the accent-colored menu bar alike.
-  function gearIcon() {
-    const teeth = 8, outer = 11, inner = 8.4, c = 12;
-    let d = '';
-    for (let i = 0; i < teeth; i++) {
-      const a = (i / teeth) * Math.PI * 2;
-      const w = (Math.PI / teeth) * 0.55; // half a tooth's width, as an angle
-      const pts = [[inner, a - w * 1.6], [outer, a - w], [outer, a + w], [inner, a + w * 1.6]];
-      for (const [r, t] of pts) d += (d ? 'L' : 'M') + (c + r * Math.cos(t)).toFixed(2) + ' ' + (c + r * Math.sin(t)).toFixed(2);
-      const next = ((i + 1) / teeth) * Math.PI * 2 - w * 1.6;
-      d += `A${inner} ${inner} 0 0 1 ${(c + inner * Math.cos(next)).toFixed(2)} ${(c + inner * Math.sin(next)).toFixed(2)}`;
-    }
-    d += 'Z M15.4 12 A3.4 3.4 0 1 0 8.6 12 A3.4 3.4 0 1 0 15.4 12 Z';
-    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="${d}"/></svg>`;
-  }
-  function closeIcon() {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>';
-  }
+  // The gear: assets/gear-icon-vector.svg, put straight into the page so it
+  // can take the site's colors (the accent color, outlined in the text
+  // color, so it shows on the page and on the accent-colored menu bar alike).
+  fetch('/assets/gear-icon-vector.svg')
+    .then((r) => (r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then((svg) => {
+      gear.innerHTML = svg;
+      const icon = gear.querySelector('svg');
+      if (!icon) throw new Error('no picture in it');
+      icon.removeAttribute('width');
+      icon.removeAttribute('height');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.removeAttribute('role');
+      icon.removeAttribute('aria-label');
+      // The gear sits in the middle of a much bigger blank picture: show just
+      // the gear, so it fills the button.
+      const box = icon.getBBox();
+      if (box.width && box.height) {
+        const pad = Math.max(box.width, box.height) * 0.04;
+        icon.setAttribute('viewBox', [box.x - pad, box.y - pad, box.width + 2 * pad, box.height + 2 * pad].map((n) => n.toFixed(1)).join(' '));
+      }
+    })
+    .catch(() => { gear.textContent = '⚙'; });
 
   // ---- The panel: Settings, Photos, Menu, Formatting key ----------------------
 
@@ -181,9 +186,15 @@ window.startSiteEditor = function startSiteEditor(P) {
     }
     if (lookKey() !== panelOpenedWith) reloadFrame();
   }
-  // The gear opens Settings (from another part of the panel too), and
-  // closes the panel when Settings is already showing.
-  gear.addEventListener('click', () => (panelKind === 'settings' ? closePanel() : openPanel('settings')));
+  // The gear opens Settings, and closes the panel whichever part of it is
+  // showing. A click anywhere outside the panel closes it too.
+  gear.addEventListener('click', () => (panel.hidden ? openPanel('settings') : closePanel()));
+  document.addEventListener('click', (e) => {
+    if (panel.hidden || !e.isTrusted) return;
+    const t = e.target;
+    if (panel.contains(t) || gear.contains(t) || publish.contains(t) || spot.contains(t) || t.closest('dialog, #toast')) return;
+    closePanel();
+  });
   // In the settings, "Reorder, add or delete them in Menu" and the like
   // lead to that part of the panel.
   panelBody.addEventListener('click', (e) => {
@@ -226,6 +237,19 @@ window.startSiteEditor = function startSiteEditor(P) {
       if (e.key === 'Escape') { hideSpot(); finishEditing(); }
     });
     frameWin.addEventListener('scroll', hideSpot, { passive: true });
+    // "Click to edit" follows the pointer over words that can be edited (not
+    // the ones being edited) and over the photos. The frame fills the window,
+    // so a spot in it is the same spot out here.
+    const tagAt = (e) => {
+      const t = e.target;
+      const over = panel.hidden && t instanceof frameWin.Element && !t.closest('.sfs-editor, .sfs-editing')
+        && (editableAt(t) || t.closest('.read-photo'));
+      hoverTag.hidden = !over;
+      if (over) hoverTag.style.transform = `translate(${e.clientX + 16}px, ${e.clientY + 18}px)`;
+    };
+    frameDoc.addEventListener('mousemove', tagAt, { passive: true });
+    frameWin.addEventListener('scroll', () => { hoverTag.hidden = true; }, { passive: true });
+    frameDoc.documentElement.addEventListener('mouseleave', () => { hoverTag.hidden = true; });
     // Pictures not on the website yet are shown from this visit.
     showPictures(frameDoc);
     new MutationObserver((list) => {
@@ -258,18 +282,28 @@ window.startSiteEditor = function startSiteEditor(P) {
     if (!(t instanceof frameWin.Element)) return;
     if (t.closest('.sfs-editor')) return; // typing in the words
     hideSpot();
+    // With the panel open, a click on the site only closes the panel.
+    if (!panel.hidden) {
+      e.preventDefault();
+      e.stopPropagation();
+      closePanel();
+      return;
+    }
     const box = editableAt(t);
     if (box) {
       e.preventDefault();
       e.stopPropagation();
       if (!editing || editing.box.el !== box.el) startEditing(box);
+      hoverTag.hidden = true;
       return;
     }
     finishEditing();
+    // A photo: straight to the photos.
     if (t.closest('.read-photo')) {
       e.preventDefault();
       e.stopPropagation();
-      showSpot(e, [['Add/Remove photos', () => openPanel('photos')]]);
+      hoverTag.hidden = true;
+      openPanel('photos');
       return;
     }
     // The title, the line under it and the space round the options (the
@@ -570,50 +604,25 @@ const FRAME_CSS = `
   html.in-site-editor [data-text-file],
   html.in-site-editor #pay-content {
     cursor: pointer;
-    border-radius: 12px;
-    outline: 2px dashed transparent;
+    /* A plain straight line round the words while the pointer is over them
+       (square corners). */
+    outline: 2px solid transparent;
     outline-offset: 14px;
     transition: outline-color 150ms ease;
   }
-  html.in-site-editor [data-text-file],
-  html.in-site-editor #pay-content { position: relative; }
   html.in-site-editor #sections > section.section:hover,
   html.in-site-editor [data-text-file]:hover,
   html.in-site-editor #pay-content:hover {
     outline-color: color-mix(in srgb, var(--fg, #000) 35%, transparent);
   }
-  /* "Click to edit", above the words while the pointer is over them. */
-  html.in-site-editor #sections > section.section::before,
-  html.in-site-editor [data-text-file]::before,
-  html.in-site-editor #pay-content::before {
-    content: 'Click to edit';
-    position: absolute;
-    /* On the dashed line, at its top-left corner. */
-    left: 10px;
-    top: -28px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: var(--accent, #e8f0d4);
-    color: var(--fg, #000);
-    font: 700 13px/1.4 'Segoe UI', system-ui, sans-serif;
-    letter-spacing: 0.02em;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 150ms ease;
-  }
-  html.in-site-editor #sections > section.section:hover::before,
-  html.in-site-editor [data-text-file]:hover::before,
-  html.in-site-editor #pay-content:hover::before { opacity: 1; }
   html.in-site-editor .sfs-editing,
   html.in-site-editor .sfs-editing:hover {
     cursor: auto;
     outline: 2px solid var(--fg, #000);
   }
-  html.in-site-editor .sfs-editing::before { display: none; }
   html.in-site-editor .sfs-hidden { display: none !important; }
   /* The photos and the title can be clicked too. */
   html.in-site-editor #read-photos .read-photo { pointer-events: auto; cursor: pointer; }
-  html.in-site-editor #read-photos .read-photo:hover { filter: brightness(0.9); }
   html.in-site-editor #menu h1,
   html.in-site-editor #menu .subtitle { cursor: pointer; }
   /* Room at the right end of the menu bar for the editor's gear. */

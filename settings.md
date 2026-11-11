@@ -1438,3 +1438,35 @@ it stands out more, or none (false):
 ```js
 ADMIN_GEAR_OUTLINE = false
 ```
+
+The panel the gear opens slides in from the right (true), or simply appears
+(false):
+
+```js
+ADMIN_PANEL_SLIDE_IN = false
+```
+
+Everything that can be clicked to edit it (a section's words, the photos,
+the title and the line under it) gets a black outline while the pointer is
+over it. The outline fades in (true), or appears at once (false):
+
+```js
+ADMIN_OUTLINE_FADE = false
+```
+
+The names along the top of the gear's panel (Settings, Photos, Menu,
+Formatting key) spread their letters apart while the pointer is over them,
+the same way the options in the menu bar do (true), or stay as they are
+(false). They spread by as much as the menu bar's options do, and as
+quickly (TOP_MENU_HOVER_LETTER_SPACING and TOP_MENU_HOVER_SPEED_MS).
+
+```js
+ADMIN_TABS_SPREAD_LETTERS = true
+```
+
+The little arrow beside each group in Settings turns smoothly when the group
+is opened or closed (true), or simply flips (false):
+
+```js
+ADMIN_SETTINGS_ARROW_ANIMATION = false
+```

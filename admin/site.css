@@ -77,8 +77,10 @@ body.panel-open #gear { transform: rotate(60deg); }
   background: var(--bg);
   color: var(--fg);
   box-shadow: -12px 0 50px rgba(0, 0, 0, 0.22);
-  animation: panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* ADMIN_PANEL_SLIDE_IN: it slides in from the right instead of just
+   appearing. */
+body.panel-slide-in #panel { animation: panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1); }
 #panel[hidden] { display: none; }
 @keyframes panel-in { from { transform: translateX(40px); opacity: 0; } }
 .panel-top {
@@ -102,6 +104,19 @@ body.panel-open #gear { transform: rotate(60deg); }
   cursor: pointer;
 }
 .panel-tab:hover { border-color: var(--line); }
+/* ADMIN_TABS_SPREAD_LETTERS: the letters spread apart on hover, as the menu
+   bar's options do (by as much, as quickly), nudging the names beside them.
+   At rest they keep their usual spacing. (text-indent balances the room
+   letter-spacing leaves after the last letter, so the word stays centered.) */
+body.tabs-spread-letters .panel-tab {
+  transition: letter-spacing var(--top-menu-hover-ms, 250ms) cubic-bezier(0.22, 1, 0.36, 1),
+    text-indent var(--top-menu-hover-ms, 250ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+body.tabs-spread-letters .panel-tab:hover,
+body.tabs-spread-letters .panel-tab:focus-visible {
+  letter-spacing: calc(var(--top-menu-hover-spacing, 0.3em) - var(--menu-spacing-hover, 0em));
+  text-indent: calc(var(--top-menu-hover-spacing, 0.3em) - var(--menu-spacing-hover, 0em));
+}
 .panel-tab.current { background: var(--accent); font-weight: 700; }
 .panel-body {
   flex: 1;

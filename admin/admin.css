@@ -509,8 +509,9 @@ body {
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: translateY(-3px) rotate(-45deg);
-  transition: transform 200ms ease;
 }
+/* ADMIN_SETTINGS_ARROW_ANIMATION: the arrow turns smoothly. */
+body.settings-arrow-animation .settings-group > summary::before { transition: transform 200ms ease; }
 .settings-group[open] > summary::before { transform: translateY(-5px) rotate(45deg); }
 .settings-group > summary .count {
   margin-left: auto;

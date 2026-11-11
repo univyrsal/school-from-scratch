@@ -25,15 +25,24 @@
 window.startSiteEditor = function startSiteEditor(P) {
   const { $, el, toast } = P;
   document.body.classList.add('site-editor');
-  // The gear's outline, if ADMIN_GEAR_OUTLINE asks for it: as the switch in
-  // Settings is now (saved or not), so it changes the moment it's flipped.
-  const applyGearOutline = () => {
-    let on = P.setting('ADMIN_GEAR_OUTLINE', false) === true;
-    const row = P.edits.get('ADMIN_GEAR_OUTLINE');
+  // The editor's own on/off settings, as the switches in Settings are now
+  // (saved or not), so each one changes the moment it's flipped.
+  const switchOn = (name, fallback) => {
+    let on = P.setting(name, fallback) === true;
+    const row = P.edits.get(name);
     if (row) { try { on = row.value() === true; } catch (e) { /* keep the saved one */ } }
-    document.body.classList.toggle('gear-outline', on);
+    return on;
   };
-  applyGearOutline();
+  const applySwitches = () => {
+    document.body.classList.toggle('gear-outline', switchOn('ADMIN_GEAR_OUTLINE', false));
+    document.body.classList.toggle('panel-slide-in', switchOn('ADMIN_PANEL_SLIDE_IN', false));
+    document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
+    document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));
+    // The outline round what can be edited lives in the page in the frame.
+    if (frameDoc && frameDoc.documentElement) {
+      frameDoc.documentElement.classList.toggle('sfs-outline-fade', switchOn('ADMIN_OUTLINE_FADE', false));
+    }
+  };
   // The gear lines up with the site's menu bar.
   document.documentElement.style.setProperty('--site-bar-height', Math.max(24, P.setting('TOP_MENU_HEIGHT', 64)) + 'px');
 
@@ -153,8 +162,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     const intro = $('.settings-intro', buildKind('settings'));
     if (intro) intro.textContent = 'Open a group to see its settings. Changed settings are highlighted; nothing is saved until you choose Save & Publish at the bottom of the screen. Close this panel to see the website with your changes first.';
     // Any setting changing (in the panel, or put back by Discard).
-    buildKind('settings').addEventListener('settings-changed', () => { updatePublish(); applyGearOutline(); });
-    applyGearOutline();
+    buildKind('settings').addEventListener('settings-changed', () => { updatePublish(); applySwitches(); });
   }
   const tabButtons = new Map(kinds.map(([kind, option]) => [kind,
     el('button', { type: 'button', class: 'panel-tab', text: option.label, onclick: () => openPanel(kind) })]));
@@ -222,6 +230,7 @@ window.startSiteEditor = function startSiteEditor(P) {
   // ---- The page in the frame ------------------------------------------------------
 
   let frameDoc = null, frameWin = null, keepScroll = null;
+  applySwitches();
 
   function reloadFrame() {
     finishEditing();
@@ -244,6 +253,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     const style = frameDoc.createElement('style');
     style.textContent = FRAME_CSS;
     frameDoc.head.appendChild(style);
+    applySwitches();
     frameDoc.addEventListener('click', onFrameClick, true);
     frameDoc.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { hideSpot(); finishEditing(); }
@@ -618,19 +628,38 @@ window.startSiteEditor = function startSiteEditor(P) {
 // Added to the page in the frame: what can be clicked, and the editor that
 // takes the place of a section's words. Uses the page's own colors.
 const FRAME_CSS = `
+  /* Everything that can be clicked to edit it: a section's words, a page's
+     own words, the photos, the title and the line under it. A plain line
+     round it while the pointer is over it (square corners round words;
+     round a photo it follows the photo's rounded corners). */
   html.in-site-editor #sections > section.section,
   html.in-site-editor [data-text-file],
-  html.in-site-editor #pay-content {
+  html.in-site-editor #pay-content,
+  html.in-site-editor #read-photos .read-photo,
+  html.in-site-editor #menu h1,
+  html.in-site-editor #menu .subtitle {
     cursor: pointer;
-    /* A plain straight line round the words while the pointer is over them
-       (square corners). */
     outline: 2px solid transparent;
     outline-offset: 14px;
+  }
+  /* ADMIN_OUTLINE_FADE: the line fades in instead of appearing at once. */
+  html.in-site-editor.sfs-outline-fade #sections > section.section,
+  html.in-site-editor.sfs-outline-fade [data-text-file],
+  html.in-site-editor.sfs-outline-fade #pay-content,
+  html.in-site-editor.sfs-outline-fade #menu h1,
+  html.in-site-editor.sfs-outline-fade #menu .subtitle {
     transition: outline-color 150ms ease;
+  }
+  /* (A photo keeps its own fade-in as it loads.) */
+  html.in-site-editor.sfs-outline-fade #read-photos .read-photo {
+    transition: opacity var(--photo-fade-in, 500ms) ease, outline-color 150ms ease;
   }
   html.in-site-editor #sections > section.section:hover,
   html.in-site-editor [data-text-file]:hover,
-  html.in-site-editor #pay-content:hover {
+  html.in-site-editor #pay-content:hover,
+  html.in-site-editor #read-photos .read-photo:hover,
+  html.in-site-editor #menu h1:hover,
+  html.in-site-editor #menu .subtitle:hover {
     outline-color: #000000;
   }
   html.in-site-editor .sfs-editing,
@@ -639,10 +668,8 @@ const FRAME_CSS = `
     outline: 2px solid #000000;
   }
   html.in-site-editor .sfs-hidden { display: none !important; }
-  /* The photos and the title can be clicked too. */
-  html.in-site-editor #read-photos .read-photo { pointer-events: auto; cursor: pointer; }
-  html.in-site-editor #menu h1,
-  html.in-site-editor #menu .subtitle { cursor: pointer; }
+  /* The photos can be clicked (on the site they let clicks through). */
+  html.in-site-editor #read-photos .read-photo { pointer-events: auto; }
   /* Room at the right end of the menu bar for the editor's gear. */
   html.in-site-editor:not(.phone-menu) #quick-list { padding-right: 76px; }
 

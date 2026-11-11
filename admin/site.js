@@ -44,14 +44,15 @@ window.startSiteEditor = function startSiteEditor(P) {
     const word = String(mode).trim().toLowerCase();
     const on = mode === true || word === 'always' || (word === 'over the bar' && gearOverBar);
     document.body.classList.toggle('gear-outline', on);
+    // ADMIN_GEAR_COLOR, or ADMIN_GEAR_COLOR_OVER_BAR while the site's menu
+    // bar is behind the gear; empty (or not a color) = the accent.
+    const gearColor = String(liveSetting(gearOverBar ? 'ADMIN_GEAR_COLOR_OVER_BAR' : 'ADMIN_GEAR_COLOR', '') || '').trim();
+    if (gearColor && CSS.supports('color', gearColor)) document.documentElement.style.setProperty('--gear-color', gearColor);
+    else document.documentElement.style.removeProperty('--gear-color');
   };
 
   const applySwitches = () => {
     applyGearOutline();
-    // ADMIN_GEAR_COLOR: the gear's color; empty (or not a color) = the accent.
-    const gearColor = String(liveSetting('ADMIN_GEAR_COLOR', '') || '').trim();
-    if (gearColor && CSS.supports('color', gearColor)) document.documentElement.style.setProperty('--gear-color', gearColor);
-    else document.documentElement.style.removeProperty('--gear-color');
     document.body.classList.toggle('panel-slide-in', switchOn('ADMIN_PANEL_SLIDE_IN', false));
     document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
     document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));

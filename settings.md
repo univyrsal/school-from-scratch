@@ -1019,10 +1019,11 @@ How the admin is laid out. /admin/?layout=site or /admin/?layout=classic picks o
 ADMIN_LAYOUT = "site"
 ```
 
-Empty ("") follows ACCENT_COLOR.
+The gear's color, and its color while the menu bar is behind it. Empty ("") follows ACCENT_COLOR.
 
 ```js
 ADMIN_GEAR_COLOR = "#000000"
+ADMIN_GEAR_COLOR_OVER_BAR = ""
 ```
 
 A thin outline round the gear and its "Settings" label:
@@ -1032,7 +1033,7 @@ A thin outline round the gear and its "Settings" label:
 - `"never"` = no outline.
 
 ```js
-ADMIN_GEAR_OUTLINE = "never"
+ADMIN_GEAR_OUTLINE = "over the bar"
 ```
 
 The gear's panel slides in, or just appears.

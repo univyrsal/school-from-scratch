@@ -314,8 +314,7 @@
 
   function buildKey() {
     const section = el('section', { class: 'section key', id: 'formatting' },
-      el('h2', { text: 'Formatting key' }),
-      el('p', { class: 'file-note', text: 'How to write the words on every page' }));
+      el('h2', { text: 'Formatting key' }));
     const table = el('div', { class: 'key-table', role: 'table', 'aria-label': 'Formatting rules' },
       el('div', { class: 'key-row key-head', role: 'row' },
         el('span', { role: 'columnheader', text: 'To get' }),
@@ -363,8 +362,7 @@
         el('div', {}, el('label', { class: 'pane-label', text: 'Words' }), textBox),
         el('div', {}, el('span', { class: 'pane-label', text: 'How it will look' }), preview)),
       el('p', { class: 'edit-help', html:
-        'Every way to format the words — bold, lists, headings, centering and more — is in the ' +
-        '<a href="#formatting">formatting key</a> at the top of this page.' }),
+        'Every way to format the words is in the <a href="#formatting">formatting key</a>.' }),
       el('div', { class: 'actions' }, pictureButton, pictureChooser, cancel, review));
 
     const show = () => renderInto(view, files.get(option.file).text, option);
@@ -479,8 +477,7 @@
     const section = el('section', { class: 'section', id: option.id });
     section.append(
       el('h2', { text: option.label }),
-      el('p', { class: 'file-note', text: 'Everything else about the website, from settings.md' }),
-      el('p', { class: 'settings-intro', text: 'Open a group to see its settings. Changed settings are highlighted; nothing is saved until you choose Review & save at the bottom of the screen.' }));
+      el('p', { class: 'settings-intro', text: 'Sizes are in pixels and times in milliseconds unless a note says otherwise. Nothing is saved until you choose Review & save.' }));
     const search = el('input', { type: 'search', class: 'settings-search', placeholder: 'Find a setting by name or description', 'aria-label': 'Find a setting' });
     section.append(search);
 
@@ -677,7 +674,7 @@
     switch (kind) {
       case 'menu': {
         const menuOption = options.find((o) => o.file === 'menu');
-        control.append(el('p', { class: 'hint' }, entry.value.join(', ') + '. Reorder, add or delete them in ',
+        control.append(el('p', { class: 'hint' }, entry.value.join(', ') + '. Change them in ',
           el('a', { href: '#' + (menuOption ? menuOption.id : 'menu'), text: menuOption ? menuOption.label : 'Menu' }), '.'));
         break;
       }
@@ -686,9 +683,9 @@
         const note = el('p', { class: 'hint' });
         control.append(note);
         reset = () => {
-          note.replaceChildren(`${entry.value.length} photo${entry.value.length === 1 ? '' : 's'}. Add or remove them in `,
+          note.replaceChildren(`${entry.value.length} photo${entry.value.length === 1 ? '' : 's'}. Change them in `,
             el('a', { href: '#' + (photosOption ? photosOption.id : 'photos'), text: photosOption ? photosOption.label : 'Photos' }),
-            ', where each one is shown.');
+            '.');
         };
         break;
       }
@@ -942,15 +939,12 @@
     const addProblem = el('p', { class: 'problem', role: 'alert' });
     section.append(
       el('h2', { text: option.label }),
-      el('p', { class: 'file-note', text: 'The menu on the home page, top to bottom' }),
-      el('p', { class: 'settings-intro', text: 'Move a section up or down with the arrows, then save the new order. Add a new section at the bottom, or delete one. You\'ll see exactly what will change before anything is saved.' }),
       list,
       orderActions,
       el('div', { class: 'add-section' },
         el('label', { for: 'new-section-name', class: 'setting-label', text: 'Add a new section' }),
         el('div', { class: 'add-section-row' }, nameBox, addButton),
-        addProblem,
-        el('p', { class: 'hint', text: 'It goes at the bottom of the menu and shows "Under Development" until you write its words.' })));
+        addProblem));
 
     const links = setting('MENU_LINKS', {});
     const optionFor = (name) => options.find((o) => o.label === name);
@@ -1115,7 +1109,7 @@
     section.append(
       el('h2', { text: option.label }),
       count,
-      el('p', { class: 'settings-intro', text: 'Every photo scattered around the home page. Add new ones with the button (or drop them anywhere on this section), or take one away with Remove under it. You\'ll see exactly what will change before anything is saved.' }),
+      el('p', { class: 'settings-intro', text: 'You can also drop photos anywhere here.' }),
       el('div', { class: 'actions top-actions' }, addButton, picker),
       photoGrid);
 

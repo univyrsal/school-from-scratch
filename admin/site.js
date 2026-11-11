@@ -179,7 +179,7 @@ window.startSiteEditor = function startSiteEditor(P) {
   };
   if (kinds.some(([k]) => k === 'settings')) {
     const intro = $('.settings-intro', buildKind('settings'));
-    if (intro) intro.textContent = 'Open a group to see its settings. Changed settings are highlighted; nothing is saved until you choose Save & Publish at the bottom of the screen. Close this panel to see the website with your changes first.';
+    if (intro) intro.textContent = 'Sizes are in pixels and times in milliseconds unless a note says otherwise. Nothing is saved until you choose Save & Publish.';
     // Any setting changing (in the panel, or put back by Discard).
     buildKind('settings').addEventListener('settings-changed', () => { updatePublish(); applySwitches(); });
   }
@@ -469,7 +469,7 @@ window.startSiteEditor = function startSiteEditor(P) {
       button('Formatting key', () => openPanel('key')),
       button('Done', () => finishEditing(), true),
       chooser);
-    const hint = make('p', { className: 'sfs-hint', textContent: 'You\'re editing the text file these words are written in. Click Done, or anywhere outside it, to see how they\'ll look.' });
+    const hint = make('p', { className: 'sfs-hint', textContent: 'Click Done, or anywhere outside the box, to see how it will look.' });
     const editorEl = make('div', { className: 'sfs-editor' });
     editorEl.append(hint, textBox, tools);
     box.body.classList.add('sfs-hidden');

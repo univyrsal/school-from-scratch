@@ -51,13 +51,16 @@ body.site-editor > #settings-bar { display: none !important; }
   fill: var(--accent);
   stroke: none;
 }
-/* ADMIN_GEAR_OUTLINE: a thin outline round it in the text color. */
+/* ADMIN_GEAR_OUTLINE: a thin outline round it in the text color (always, or
+   only while the site's menu bar is behind it; site.js decides). Its
+   "Settings" label gets the same outline at the same times. */
 body.gear-outline #gear svg path {
   stroke: var(--fg);
   stroke-width: 1.3px;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
+body.gear-outline #gear-tag { outline: 1.3px solid var(--fg); }
 #gear:hover { transform: rotate(30deg); }
 #gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 body.panel-open #gear { transform: rotate(60deg); }
@@ -149,7 +152,6 @@ body.tabs-spread-letters .panel-tab:focus-visible {
   letter-spacing: 0.02em;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 #hover-tag[hidden] { display: none; }
 /* The gear's name, to its left while the pointer is over it. */
@@ -173,7 +175,6 @@ body.panel-open #gear:hover + #gear-tag { display: none; }
   padding: 6px;
   border-radius: 14px;
   background: var(--bg);
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25);
   animation: spot-in 160ms ease-out;
 }
 #spot-menu[hidden] { display: none; }
@@ -212,7 +213,6 @@ body.panel-open #gear:hover + #gear-tag { display: none; }
   border-radius: 24px;
   background: var(--bg);
   color: var(--fg);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.28);
   transform: translateX(-50%);
   animation: publish-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }

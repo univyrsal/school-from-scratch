@@ -1432,11 +1432,16 @@ ADMIN_LAYOUT = "site"
 ```
 
 The gear in the top-right corner of the admin (in the "site" layout) is in
-the accent color. Give it a thin outline in the text color too (true), so
-it stands out more, or none (false):
+the accent color. It can have a thin outline in the text color too, so it
+stands out more. Its "Settings" label (shown while the pointer is over the
+gear) gets the same outline at the same times.
+
+- `"always"` = always outlined.
+- `"over the bar"` = outlined only while the website's menu bar is behind the gear (the gear is the same color as the bar, so it's hard to see there).
+- `"never"` = never outlined.
 
 ```js
-ADMIN_GEAR_OUTLINE = false
+ADMIN_GEAR_OUTLINE = "over the bar"
 ```
 
 The panel the gear opens slides in from the right (true), or simply appears

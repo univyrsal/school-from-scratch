@@ -27,14 +27,27 @@ window.startSiteEditor = function startSiteEditor(P) {
   document.body.classList.add('site-editor');
   // The editor's own on/off settings, as the switches in Settings are now
   // (saved or not), so each one changes the moment it's flipped.
-  const switchOn = (name, fallback) => {
-    let on = P.setting(name, fallback) === true;
+  const liveSetting = (name, fallback) => {
+    let value = P.setting(name, fallback);
     const row = P.edits.get(name);
-    if (row) { try { on = row.value() === true; } catch (e) { /* keep the saved one */ } }
-    return on;
+    if (row) { try { value = row.value(); } catch (e) { /* keep the saved one */ } }
+    return value;
   };
+  const switchOn = (name, fallback) => liveSetting(name, fallback) === true;
+
+  // ADMIN_GEAR_OUTLINE: "always", "never", or "over the bar" (only while the
+  // site's menu bar is behind the gear). The gear's "Settings" label follows
+  // the gear. (true / false, from before there were three, still work.)
+  let gearOverBar = false;
+  const applyGearOutline = () => {
+    const mode = liveSetting('ADMIN_GEAR_OUTLINE', 'never');
+    const word = String(mode).trim().toLowerCase();
+    const on = mode === true || word === 'always' || (word === 'over the bar' && gearOverBar);
+    document.body.classList.toggle('gear-outline', on);
+  };
+
   const applySwitches = () => {
-    document.body.classList.toggle('gear-outline', switchOn('ADMIN_GEAR_OUTLINE', false));
+    applyGearOutline();
     document.body.classList.toggle('panel-slide-in', switchOn('ADMIN_PANEL_SLIDE_IN', false));
     document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
     document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));
@@ -184,6 +197,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     panelBody.replaceChildren(buildKind(kind));
     panel.hidden = false;
     document.body.classList.add('panel-open');
+    checkGearOverBar();
     panelBody.scrollTop = 0;
     // Straight to one setting (the title, say).
     if (find && kind === 'settings') {
@@ -199,6 +213,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     panel.hidden = true;
     panelKind = null;
     document.body.classList.remove('panel-open');
+    checkGearOverBar();
     const search = $('.settings-search', built.get('settings') || document.createElement('div'));
     if (search && search.value) {
       search.value = '';
@@ -232,6 +247,38 @@ window.startSiteEditor = function startSiteEditor(P) {
   let frameDoc = null, frameWin = null, keepScroll = null;
   applySwitches();
 
+  // Is the site's menu bar behind the gear right now? (Asked of the page in
+  // the frame, at the gear's middle; the frame fills the window, so a spot
+  // here is the same spot there.) With the panel open, the panel is behind
+  // the gear instead.
+  function checkGearOverBar() {
+    let over = false;
+    if (frameDoc && panel.hidden) {
+      const r = gear.getBoundingClientRect();
+      try {
+        const hit = frameDoc.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        over = !!(hit && hit.closest('#quick-nav'));
+      } catch (e) { over = false; }
+    }
+    if (over !== gearOverBar) {
+      gearOverBar = over;
+      applyGearOutline();
+    }
+  }
+  // The bar slides in and out (TOP_MENU_SLIDE_MS), so keep asking for a
+  // moment after anything that might move it.
+  let barWatchUntil = 0, barWatchFrame = 0;
+  function watchBar() {
+    barWatchUntil = performance.now() + Math.max(0, Number(P.setting('TOP_MENU_SLIDE_MS', 350)) || 0) + 250;
+    if (barWatchFrame) return;
+    const tick = () => {
+      checkGearOverBar();
+      barWatchFrame = performance.now() < barWatchUntil ? requestAnimationFrame(tick) : 0;
+    };
+    barWatchFrame = requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize', watchBar);
+
   function reloadFrame() {
     finishEditing();
     try { keepScroll = frameWin ? frameWin.scrollY : null; } catch (e) { keepScroll = null; }
@@ -259,6 +306,8 @@ window.startSiteEditor = function startSiteEditor(P) {
       if (e.key === 'Escape') { hideSpot(); finishEditing(); }
     });
     frameWin.addEventListener('scroll', hideSpot, { passive: true });
+    frameWin.addEventListener('scroll', watchBar, { passive: true });
+    watchBar();
     // "Click to edit" follows the pointer over words that can be edited (not
     // the ones being edited) and over the photos. The frame fills the window,
     // so a spot in it is the same spot out here.
@@ -630,18 +679,27 @@ window.startSiteEditor = function startSiteEditor(P) {
 const FRAME_CSS = `
   /* Everything that can be clicked to edit it: a section's words, a page's
      own words, the photos, the title and the line under it. A plain line
-     round it while the pointer is over it (square corners round words;
-     round a photo it follows the photo's rounded corners). */
+     round it while the pointer is over it, with square corners. (A photo's
+     line is drawn on a box laid over it, so it stays square even though the
+     photo's corners are rounded.) */
   html.in-site-editor #sections > section.section,
   html.in-site-editor [data-text-file],
   html.in-site-editor #pay-content,
-  html.in-site-editor #read-photos .read-photo,
+  html.in-site-editor #read-photos .read-photo::after,
   html.in-site-editor #menu h1,
   html.in-site-editor #menu .subtitle {
     cursor: pointer;
     outline: 2px solid transparent;
     outline-offset: 14px;
   }
+  html.in-site-editor #read-photos .read-photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    pointer-events: none;
+  }
+  html.in-site-editor #read-photos .read-photo { cursor: pointer; }
   /* ADMIN_OUTLINE_FADE: the line fades in instead of appearing at once. */
   html.in-site-editor.sfs-outline-fade #sections > section.section,
   html.in-site-editor.sfs-outline-fade [data-text-file],
@@ -650,14 +708,13 @@ const FRAME_CSS = `
   html.in-site-editor.sfs-outline-fade #menu .subtitle {
     transition: outline-color 150ms ease;
   }
-  /* (A photo keeps its own fade-in as it loads.) */
-  html.in-site-editor.sfs-outline-fade #read-photos .read-photo {
-    transition: opacity var(--photo-fade-in, 500ms) ease, outline-color 150ms ease;
+  html.in-site-editor.sfs-outline-fade #read-photos .read-photo::after {
+    transition: outline-color 150ms ease;
   }
   html.in-site-editor #sections > section.section:hover,
   html.in-site-editor [data-text-file]:hover,
   html.in-site-editor #pay-content:hover,
-  html.in-site-editor #read-photos .read-photo:hover,
+  html.in-site-editor #read-photos .read-photo:hover::after,
   html.in-site-editor #menu h1:hover,
   html.in-site-editor #menu .subtitle:hover {
     outline-color: #000000;

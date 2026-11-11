@@ -1481,3 +1481,10 @@ is opened or closed (true), or simply flips (false):
 ```js
 ADMIN_SETTINGS_ARROW_ANIMATION = false
 ```
+
+The on/off switches in Settings slide across when flipped (true), or simply
+change (false):
+
+```js
+ADMIN_SWITCH_ANIMATION = false
+```

@@ -187,7 +187,6 @@ main.payments {
   color: var(--fg, #0b1105);
   font-size: 15px;
   line-height: 1;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
 }
 .embed-wake:hover span { filter: brightness(0.96); }
 /* Words pushed into the middle of the page, between -> and <- in the file. */

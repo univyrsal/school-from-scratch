@@ -136,6 +136,8 @@
     $('#quick-list').classList.toggle('arrow-up', setting('TOP_MENU_ARROW_WHEN_MOVING_UP', true));
     // The arrow beside each group in Settings turns smoothly, or just flips.
     document.body.classList.toggle('settings-arrow-animation', setting('ADMIN_SETTINGS_ARROW_ANIMATION', false) === true);
+    // The on/off switches slide across, or just flip.
+    document.body.classList.toggle('switch-animation', setting('ADMIN_SWITCH_ANIMATION', false) === true);
     // Section text, as on the home page.
     root.setProperty('--section-width', px('SECTION_TEXT_WIDTH', 720, 200));
     root.setProperty('--section-heading-size', px('SECTION_HEADING_SIZE', 44, 8));

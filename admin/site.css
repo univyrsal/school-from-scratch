@@ -38,33 +38,53 @@ body.site-editor > #settings-bar { display: none !important; }
   border-radius: 50%;
   background: none;
   cursor: pointer;
+}
+/* The picture in assets/gear-icon-vector.svg, twice, one copy over the
+   other: .gear-base is the usual look (ADMIN_GEAR_COLOR), .gear-over the
+   look over the site's menu bar (ADMIN_GEAR_COLOR_OVER_BAR). The bar works
+   like a filter: --bar-edge (site.js) is where its bottom edge is, and each
+   copy is shown only on its own side of that line, so the look changes
+   along the edge as the bar slides over the gear. (The copies turn inside
+   their layers, so the line stays level while the gear turns.) */
+.gear-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+.gear-base {
+  clip-path: inset(clamp(-12px, calc(var(--bar-edge, 0px) - var(--gear-inset)), calc(100% + 12px)) -12px -12px -12px);
+}
+.gear-over {
+  clip-path: inset(-12px -12px clamp(-12px, calc(100% - var(--bar-edge, 0px) + var(--gear-inset)), calc(100% + 12px)) -12px);
+}
+.gear-spin {
+  display: block;
+  width: 100%;
+  height: 100%;
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* The picture in assets/gear-icon-vector.svg, in ADMIN_GEAR_COLOR (the
-   accent color unless that's set). */
 #gear svg {
   display: block;
   width: 100%;
   height: 100%;
   overflow: visible;
 }
-#gear svg path {
-  fill: var(--gear-color, var(--accent));
-  stroke: none;
-}
-/* ADMIN_GEAR_OUTLINE: a thin outline round it in the text color (always, or
-   only while the site's menu bar is behind it; site.js decides). Its
-   "Settings" label gets the same outline at the same times. */
-body.gear-outline #gear svg path {
+.gear-layer svg path { stroke: none; }
+.gear-base svg path { fill: var(--gear-color, var(--accent)); }
+.gear-over svg path { fill: var(--gear-color-over, var(--accent)); }
+/* ADMIN_GEAR_OUTLINE: a thin outline in the text color, everywhere
+   ("always") or only over the bar ("over the bar"). */
+body.gear-outline-always #gear svg path,
+body.gear-outline-bar .gear-over svg path {
   stroke: var(--fg);
   stroke-width: 1.3px;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
-body.gear-outline #gear-tag { outline: 1.3px solid var(--fg); }
-#gear:hover { transform: rotate(30deg); }
+#gear:hover .gear-spin { transform: rotate(30deg); }
 #gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-body.panel-open #gear { transform: rotate(60deg); }
+body.panel-open #gear .gear-spin { transform: rotate(60deg); }
 
 /* ---- The panel ---------------------------------------------------------------- */
 
@@ -156,10 +176,22 @@ body.tabs-spread-letters .panel-tab:focus-visible {
 #hover-tag[hidden] { display: none; }
 /* The gear's name, to its left while the pointer is over it. */
 #gear-tag {
+  --tag-top: calc(var(--site-bar-height, 64px) / 2 - 17px);
   left: auto;
-  top: calc(var(--site-bar-height, 64px) / 2 - 17px);
+  top: var(--tag-top);
   right: 72px;
   display: none;
+}
+/* Its outline follows the gear's: everywhere, or only over the bar, where
+   it's drawn on a layer cut off at the bar's edge, like the gear's. */
+body.gear-outline-always #gear-tag { outline: 1.3px solid var(--fg); }
+body.gear-outline-bar #gear-tag::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  outline: 1.3px solid var(--fg);
+  clip-path: inset(-4px -4px clamp(-4px, calc(100% - var(--bar-edge, 0px) + var(--tag-top)), calc(100% + 4px)) -4px);
 }
 #gear:hover + #gear-tag { display: block; }
 body.panel-open #gear:hover + #gear-tag { display: none; }

@@ -35,24 +35,29 @@ window.startSiteEditor = function startSiteEditor(P) {
   };
   const switchOn = (name, fallback) => liveSetting(name, fallback) === true;
 
-  // ADMIN_GEAR_OUTLINE: "always", "never", or "over the bar" (only while the
-  // site's menu bar is behind the gear). The gear's "Settings" label follows
-  // the gear. (true / false, from before there were three, still work.)
-  let gearOverBar = false;
-  const applyGearOutline = () => {
+  // The gear's look on the page, and its look over the site's menu bar. The
+  // bar works like a filter laid over the gear: the part of the gear the bar
+  // covers right now has the over-the-bar look, the rest the usual one, so
+  // the look changes along the bar's edge as it slides (updateBarEdge).
+  //   ADMIN_GEAR_OUTLINE: "always", "never", or "over the bar". The gear's
+  //     "Settings" label follows the gear. (true / false still work.)
+  //   ADMIN_GEAR_COLOR / ADMIN_GEAR_COLOR_OVER_BAR: empty (or not a color)
+  //     = the accent.
+  const applyGearLook = () => {
     const mode = liveSetting('ADMIN_GEAR_OUTLINE', 'never');
     const word = String(mode).trim().toLowerCase();
-    const on = mode === true || word === 'always' || (word === 'over the bar' && gearOverBar);
-    document.body.classList.toggle('gear-outline', on);
-    // ADMIN_GEAR_COLOR, or ADMIN_GEAR_COLOR_OVER_BAR while the site's menu
-    // bar is behind the gear; empty (or not a color) = the accent.
-    const gearColor = String(liveSetting(gearOverBar ? 'ADMIN_GEAR_COLOR_OVER_BAR' : 'ADMIN_GEAR_COLOR', '') || '').trim();
-    if (gearColor && CSS.supports('color', gearColor)) document.documentElement.style.setProperty('--gear-color', gearColor);
-    else document.documentElement.style.removeProperty('--gear-color');
+    document.body.classList.toggle('gear-outline-always', mode === true || word === 'always');
+    document.body.classList.toggle('gear-outline-bar', word === 'over the bar');
+    const root = document.documentElement.style;
+    for (const [name, prop] of [['ADMIN_GEAR_COLOR', '--gear-color'], ['ADMIN_GEAR_COLOR_OVER_BAR', '--gear-color-over']]) {
+      const color = String(liveSetting(name, '') || '').trim();
+      if (color && CSS.supports('color', color)) root.setProperty(prop, color);
+      else root.removeProperty(prop);
+    }
   };
 
   const applySwitches = () => {
-    applyGearOutline();
+    applyGearLook();
     document.body.classList.toggle('panel-slide-in', switchOn('ADMIN_PANEL_SLIDE_IN', false));
     document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
     document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));
@@ -157,6 +162,11 @@ window.startSiteEditor = function startSiteEditor(P) {
         const pad = Math.max(box.width, box.height) * 0.04;
         icon.setAttribute('viewBox', [box.x - pad, box.y - pad, box.width + 2 * pad, box.height + 2 * pad].map((n) => n.toFixed(1)).join(' '));
       }
+      // Two copies, one over the other: the usual look, and the look over the
+      // menu bar, each shown only on its side of the bar's edge. Each turns
+      // on its own inside a part that doesn't, so the edge stays level.
+      const layer = (name, svg) => el('span', { class: 'gear-layer ' + name }, el('span', { class: 'gear-spin' }, svg));
+      gear.replaceChildren(layer('gear-base', icon), layer('gear-over', icon.cloneNode(true)));
     })
     .catch(() => { gear.textContent = '⚙'; });
 
@@ -204,7 +214,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     panelBody.replaceChildren(buildKind(kind));
     panel.hidden = false;
     document.body.classList.add('panel-open');
-    checkGearOverBar();
+    updateBarEdge();
     panelBody.scrollTop = 0;
     // Straight to one setting (the title, say).
     if (find && kind === 'settings') {
@@ -220,7 +230,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     panel.hidden = true;
     panelKind = null;
     document.body.classList.remove('panel-open');
-    checkGearOverBar();
+    updateBarEdge();
     const search = $('.settings-search', built.get('settings') || document.createElement('div'));
     if (search && search.value) {
       search.value = '';
@@ -254,23 +264,23 @@ window.startSiteEditor = function startSiteEditor(P) {
   let frameDoc = null, frameWin = null, keepScroll = null;
   applySwitches();
 
-  // Is the site's menu bar behind the gear right now? (Asked of the page in
-  // the frame, at the gear's middle; the frame fills the window, so a spot
-  // here is the same spot there.) With the panel open, the panel is behind
-  // the gear instead.
-  function checkGearOverBar() {
-    let over = false;
-    if (frameDoc && panel.hidden) {
-      const r = gear.getBoundingClientRect();
+  // Where the bottom edge of the site's menu bar is right now, in pixels from
+  // the top of the window (0 = no bar): the gear and its label take their
+  // over-the-bar look above that line (site.css, --bar-edge). The frame fills
+  // the window, so a spot in it is the same spot here. With the panel open,
+  // the panel is behind the gear instead.
+  function updateBarEdge() {
+    let edge = 0;
+    if (frameDoc && frameWin && panel.hidden) {
       try {
-        const hit = frameDoc.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        over = !!(hit && hit.closest('#quick-nav'));
-      } catch (e) { over = false; }
+        const bar = frameDoc.getElementById('quick-nav');
+        if (bar && frameWin.getComputedStyle(bar).visibility !== 'hidden') {
+          const r = bar.getBoundingClientRect();
+          if (r.height > 0) edge = Math.max(0, r.bottom);
+        }
+      } catch (e) { edge = 0; }
     }
-    if (over !== gearOverBar) {
-      gearOverBar = over;
-      applyGearOutline();
-    }
+    document.documentElement.style.setProperty('--bar-edge', edge.toFixed(1) + 'px');
   }
   // The bar slides in and out (TOP_MENU_SLIDE_MS), so keep asking for a
   // moment after anything that might move it.
@@ -279,7 +289,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     barWatchUntil = performance.now() + Math.max(0, Number(P.setting('TOP_MENU_SLIDE_MS', 350)) || 0) + 250;
     if (barWatchFrame) return;
     const tick = () => {
-      checkGearOverBar();
+      updateBarEdge();
       barWatchFrame = performance.now() < barWatchUntil ? requestAnimationFrame(tick) : 0;
     };
     barWatchFrame = requestAnimationFrame(tick);

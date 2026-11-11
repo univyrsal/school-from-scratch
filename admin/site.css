@@ -40,7 +40,8 @@ body.site-editor > #settings-bar { display: none !important; }
   cursor: pointer;
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* The picture in assets/gear-icon-vector.svg, in the accent color. */
+/* The picture in assets/gear-icon-vector.svg, in ADMIN_GEAR_COLOR (the
+   accent color unless that's set). */
 #gear svg {
   display: block;
   width: 100%;
@@ -48,7 +49,7 @@ body.site-editor > #settings-bar { display: none !important; }
   overflow: visible;
 }
 #gear svg path {
-  fill: var(--accent);
+  fill: var(--gear-color, var(--accent));
   stroke: none;
 }
 /* ADMIN_GEAR_OUTLINE: a thin outline round it in the text color (always, or
@@ -79,7 +80,6 @@ body.panel-open #gear { transform: rotate(60deg); }
   box-sizing: border-box;
   background: var(--bg);
   color: var(--fg);
-  box-shadow: -12px 0 50px rgba(0, 0, 0, 0.22);
 }
 /* ADMIN_PANEL_SLIDE_IN: it slides in from the right instead of just
    appearing. */

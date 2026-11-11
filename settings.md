@@ -1431,8 +1431,14 @@ or /admin/?layout=classic.
 ADMIN_LAYOUT = "site"
 ```
 
-The gear in the top-right corner of the admin (in the "site" layout) is in
-the accent color. It can have a thin outline in the text color too, so it
+The color of the gear in the top-right corner of the admin (in the "site"
+layout). Empty ("") uses ACCENT_COLOR, so the gear follows it.
+
+```js
+ADMIN_GEAR_COLOR = "#dfeac0"
+```
+
+The gear can have a thin outline in the text color too, so it
 stands out more. Its "Settings" label (shown while the pointer is over the
 gear) gets the same outline at the same times.
 

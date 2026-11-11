@@ -48,6 +48,10 @@ window.startSiteEditor = function startSiteEditor(P) {
 
   const applySwitches = () => {
     applyGearOutline();
+    // ADMIN_GEAR_COLOR: the gear's color; empty (or not a color) = the accent.
+    const gearColor = String(liveSetting('ADMIN_GEAR_COLOR', '') || '').trim();
+    if (gearColor && CSS.supports('color', gearColor)) document.documentElement.style.setProperty('--gear-color', gearColor);
+    else document.documentElement.style.removeProperty('--gear-color');
     document.body.classList.toggle('panel-slide-in', switchOn('ADMIN_PANEL_SLIDE_IN', false));
     document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
     document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));
@@ -314,7 +318,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     const tagAt = (e) => {
       const t = e.target;
       const over = panel.hidden && t instanceof frameWin.Element && !t.closest('.sfs-editor, .sfs-editing')
-        && (editableAt(t) || t.closest('.read-photo') || titleSettingAt(t));
+        && (editableAt(t) || t.closest('.read-photo') || titleSettingAt(t) || menuAreaAt(t));
       hoverTag.hidden = !over;
       if (over) hoverTag.style.transform = `translate(${e.clientX + 16}px, ${e.clientY + 18}px)`;
     };
@@ -386,6 +390,16 @@ window.startSiteEditor = function startSiteEditor(P) {
       openPanel('settings', titleSetting);
       return;
     }
+    // The home screen's menu, around its options: straight to Menu (to put
+    // the sections in order, add or delete them). An option itself still
+    // goes to its section, as on the website.
+    if (menuAreaAt(t)) {
+      e.preventDefault();
+      e.stopPropagation();
+      hoverTag.hidden = true;
+      openPanel('menu');
+      return;
+    }
     // A link to another website opens in a new tab, so the editor stays.
     const link = t.closest('a[href]');
     if (link) {
@@ -406,6 +420,9 @@ window.startSiteEditor = function startSiteEditor(P) {
     if (t.closest('#menu .subtitle')) return 'MENU_SUBTITLE';
     return null;
   }
+
+  // The home screen's menu under the pointer, but not one of its options.
+  const menuAreaAt = (t) => !!(t.closest('#menu nav') && !t.closest('a') && kinds.some(([k]) => k === 'menu'));
 
   // The words under a click: a section on the home page, or the words of a
   // page of its own (Contact, Payments, the play).
@@ -678,7 +695,9 @@ window.startSiteEditor = function startSiteEditor(P) {
 // takes the place of a section's words. Uses the page's own colors.
 const FRAME_CSS = `
   /* Everything that can be clicked to edit it: a section's words, a page's
-     own words, the photos, the title and the line under it. A plain line
+     own words, the photos, the title and the line under it, the home
+     screen's menu (around its options, which still lead to their
+     sections; the line stays while the pointer is on one). A plain line
      round it while the pointer is over it, with square corners. (A photo's
      line is drawn on a box laid over it, so it stays square even though the
      photo's corners are rounded.) */
@@ -687,7 +706,8 @@ const FRAME_CSS = `
   html.in-site-editor #pay-content,
   html.in-site-editor #read-photos .read-photo::after,
   html.in-site-editor #menu h1,
-  html.in-site-editor #menu .subtitle {
+  html.in-site-editor #menu .subtitle,
+  html.in-site-editor #menu nav {
     cursor: pointer;
     outline: 2px solid transparent;
     outline-offset: 14px;
@@ -705,7 +725,8 @@ const FRAME_CSS = `
   html.in-site-editor.sfs-outline-fade [data-text-file],
   html.in-site-editor.sfs-outline-fade #pay-content,
   html.in-site-editor.sfs-outline-fade #menu h1,
-  html.in-site-editor.sfs-outline-fade #menu .subtitle {
+  html.in-site-editor.sfs-outline-fade #menu .subtitle,
+  html.in-site-editor.sfs-outline-fade #menu nav {
     transition: outline-color 150ms ease;
   }
   html.in-site-editor.sfs-outline-fade #read-photos .read-photo::after {
@@ -716,7 +737,8 @@ const FRAME_CSS = `
   html.in-site-editor #pay-content:hover,
   html.in-site-editor #read-photos .read-photo:hover::after,
   html.in-site-editor #menu h1:hover,
-  html.in-site-editor #menu .subtitle:hover {
+  html.in-site-editor #menu .subtitle:hover,
+  html.in-site-editor #menu nav:hover {
     outline-color: #000000;
   }
   html.in-site-editor .sfs-editing,

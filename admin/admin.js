@@ -748,13 +748,38 @@
     changedSettings().forEach((s) => s.reset());
   });
 
-  $('#settings-review').addEventListener('click', () => {
+  // The changed settings and their new values, plus any that are written
+  // wrong ({ changed, changes, problems }).
+  function settingChanges() {
     const changed = changedSettings();
     const problems = [];
     const changes = {};
     for (const s of changed) {
       try { changes[s.entry.name] = s.value(); } catch (e) { problems.push(`${niceName(s.entry.name)}: ${e.message}`); }
     }
+    return { changed, changes, problems };
+  }
+
+  // Saves them, and takes the new values as the saved ones.
+  async function saveSettings(changed, changes) {
+    const done = await call('/admin/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: 'settings.md', sha: settingsFile.sha, changes }),
+    });
+    // Read the new version's sha so the next save starts from it.
+    settingsFile.sha = done.sha;
+    for (const s of changed) {
+      s.entry.value = changes[s.entry.name];
+      values[s.entry.name] = changes[s.entry.name];
+      s.reset();
+    }
+    applyTitle();
+    return done.message;
+  }
+
+  $('#settings-review').addEventListener('click', () => {
+    const { changed, changes, problems } = settingChanges();
     if (problems.length) {
       toast('Some settings need fixing first — they are marked in red.');
       const first = changed.find((s) => { try { s.value(); return false; } catch (e) { return true; } });
@@ -770,23 +795,7 @@
       title: `Save ${changed.length} setting${changed.length === 1 ? '' : 's'}?`,
       intro: 'Old values are in red, new ones in green. Once saved, the website shows the change in about a minute.',
       body: list,
-      save: async () => {
-        const done = await call('/admin/api/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: 'settings.md', sha: settingsFile.sha, changes }),
-        });
-        // Take the new values as the saved ones, and read the new version's
-        // sha so the next save starts from it.
-        settingsFile.sha = done.sha;
-        for (const s of changed) {
-          s.entry.value = changes[s.entry.name];
-          values[s.entry.name] = changes[s.entry.name];
-          s.reset();
-        }
-        applyTitle();
-        return done.message;
-      },
+      save: () => saveSettings(changed, changes),
     });
   });
 
@@ -1522,8 +1531,9 @@
       link.classList.add('glow');
     }
     const hash = link.getAttribute('href');
-    const url = location.pathname + (hash === '#' ? '' : hash);
-    if (location.pathname + location.hash !== url) history.pushState(null, '', url);
+    // (Keeping ?layout=classic, if that's how the admin was opened.)
+    const url = location.pathname + location.search + (hash === '#' ? '' : hash);
+    if (location.pathname + location.search + location.hash !== url) history.pushState(null, '', url);
     const target = hash.length > 1 && document.getElementById(hash.slice(1));
     const top = target ? sectionTop(target) : 0;
     scrollToHash(true, nudge(link, Math.sign(top - window.scrollY)));
@@ -1555,6 +1565,17 @@
     applyTitle();
     readLetterSettings();
     options = workOutOptions();
+    // Which layout: the site editor (the real site, click what to change;
+    // admin/site.js) or this classic one, as ADMIN_LAYOUT says; ?layout=classic
+    // or ?layout=site in the address picks one for this visit only.
+    const asked = new URLSearchParams(location.search).get('layout');
+    const layout = (asked === 'classic' || asked === 'site') ? asked
+      : String(setting('ADMIN_LAYOUT', 'site')).trim().toLowerCase();
+    if (layout !== 'classic' && typeof window.startSiteEditor === 'function') {
+      status.textContent = '';
+      window.startSiteEditor(parts);
+      return;
+    }
     sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o)
       : o.file === 'photos' ? buildPhotosSection(o)
       : o.file === 'menu' ? buildMenuSection(o) : buildPageSection(o)));
@@ -1572,6 +1593,21 @@
       if (document.fonts) document.fonts.ready.then(() => scrollToHash(false));
     }
   }
+
+  // The pieces the site editor (admin/site.js) builds on, so the settings,
+  // photos and menu work exactly the same in both layouts.
+  const parts = {
+    $, el, call, toast, setting, pageSlug, niceName,
+    files, unsaved, edits,
+    get settingsFile() { return settingsFile; },
+    get values() { return values; },
+    get options() { return options; },
+    get sitePaths() { return sitePaths; },
+    renderInto, diffView, changeItem, openReview, reloadWith,
+    buildSettingsSection, buildPhotosSection, buildMenuSection, buildKey,
+    changedSettings, settingChanges, saveSettings,
+    preparePicture, photoTitle, photoFolder,
+  };
 
   start();
 })();

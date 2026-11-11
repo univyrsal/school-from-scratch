@@ -1377,8 +1377,8 @@ LOWER_RESOLUTION_WHILE_MOVING = true
 
 ## The admin page (/admin)
 
-The page where the site's words and settings are edited. It is laid out like
-the home page, without the photos. Only people allowed in by Cloudflare
+The page where the site's words and settings are edited (ADMIN_LAYOUT, at the
+end, picks how it's laid out). Only people allowed in by Cloudflare
 Access can open it.
 
 The big title at the top of the admin page.
@@ -1417,4 +1417,16 @@ shows every photo in PHOTOS as a picture, to add new ones or remove them.
 
 ```js
 ADMIN_PHOTOS_LABEL = "Photos"
+```
+
+How the admin page is laid out:
+
+- `"site"` = the website itself, as visitors see it. Click a section's words to change them right there; click a photo to add or remove photos; click the title for the menu. Everything else is under the gear in the top-right corner. A "Save & Publish" box appears at the bottom once something has changed.
+- `"classic"` = the earlier layout: the menu at the top, every page's words in a list down the page with an Edit button, and Settings, Photos and Menu as sections of their own.
+
+Either one can also be opened for a single visit with /admin/?layout=site
+or /admin/?layout=classic.
+
+```js
+ADMIN_LAYOUT = "site"
 ```

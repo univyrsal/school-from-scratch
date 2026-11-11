@@ -1,0 +1,213 @@
+/* The site editor (site.js): the real site fills the window, with a gear in
+   the top-right corner, a panel that slides in from the right for Settings,
+   Photos, Menu and the formatting key, and a box at the bottom once there's
+   something to save. Only while the body has the site-editor class; the
+   classic layout is untouched. */
+
+body.site-editor { overflow: hidden; }
+/* The classic layout's own parts aren't used here. */
+body.site-editor > #home,
+body.site-editor > #sections,
+body.site-editor > #quick-nav,
+body.site-editor > #settings-bar { display: none !important; }
+
+#site-frame {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+}
+
+/* ---- The gear --------------------------------------------------------------- */
+
+#gear {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  /* A soft shadow, so it stands out over photos too. */
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#gear svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--accent);
+  stroke: var(--fg);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+#gear:hover { transform: rotate(30deg); }
+#gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+body.panel-open #gear { transform: rotate(60deg); }
+
+/* ---- The panel ---------------------------------------------------------------- */
+
+#panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: -12px 0 50px rgba(0, 0, 0, 0.22);
+  animation: panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#panel[hidden] { display: none; }
+@keyframes panel-in { from { transform: translateX(40px); opacity: 0; } }
+.panel-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Room on the right for the gear, which stays put over the panel. */
+  padding: 12px 74px 12px 16px;
+  border-bottom: 1.5px solid var(--line);
+}
+.panel-tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+.panel-tab {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.panel-tab:hover { border-color: var(--line); }
+.panel-tab.current { background: var(--accent); font-weight: 700; }
+.panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.panel-close:hover { border-color: var(--fg); }
+.panel-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 28px 40px;
+}
+/* The classic layout's sections, sized for the panel. */
+.panel-body > .section {
+  width: auto;
+  margin: 0;
+  font-size: 17px;
+}
+.panel-body > .section > h2 { margin-top: 0.6em; }
+.panel-foot {
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1.5px solid var(--line);
+  font-size: 14px;
+  color: var(--quiet);
+  text-align: center;
+}
+.panel-foot a { color: var(--fg); }
+
+/* ---- Where something was clicked: what can be done with it ------------------ */
+
+#spot-menu {
+  position: fixed;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25);
+  animation: spot-in 160ms ease-out;
+}
+#spot-menu[hidden] { display: none; }
+@keyframes spot-in { from { transform: translateY(-4px); opacity: 0; } }
+#spot-menu button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+#spot-menu button:hover,
+#spot-menu button:focus-visible { background: var(--accent); outline: none; }
+
+/* ---- Save & Publish ---------------------------------------------------------- */
+
+#publish {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  max-height: calc(100vh - 40px);
+  box-sizing: border-box;
+  padding: 14px 16px 14px 22px;
+  border-radius: 24px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.28);
+  transform: translateX(-50%);
+  animation: publish-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#publish[hidden] { display: none; }
+@keyframes publish-in { from { transform: translate(-50%, 16px); opacity: 0; } }
+.publish-what { margin: 0; font-size: 16px; text-align: center; }
+.publish-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.publish-details {
+  width: min(760px, calc(100vw - 72px));
+  max-height: 55vh;
+  overflow-y: auto;
+  font-size: 15px;
+}
+.publish-details[hidden] { display: none; }
+.publish-item h3 {
+  margin: 12px 0 6px;
+  font-family: var(--heading-font);
+  font-weight: var(--heading-weight);
+  font-size: 18px;
+}
+.publish-error {
+  margin: 0;
+  max-width: 560px;
+  color: var(--warn);
+  font-size: 15px;
+  text-align: center;
+}
+.publish-error[hidden] { display: none; }
+/* The toast sits above the box while both are showing. */
+body.site-editor.has-changes #toast { bottom: 120px; }

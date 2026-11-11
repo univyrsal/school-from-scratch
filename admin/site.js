@@ -74,7 +74,9 @@ window.startSiteEditor = function startSiteEditor(P) {
   // ---- The layout -------------------------------------------------------------
 
   const frame = el('iframe', { id: 'site-frame', title: 'The website, as it will look', src: '/' });
-  const gear = el('button', { type: 'button', id: 'gear', 'aria-label': 'Settings', title: 'Settings' });
+  const gear = el('button', { type: 'button', id: 'gear', 'aria-label': 'Settings' });
+  // Its name, shown beside it while the pointer is over it.
+  const gearTag = el('div', { id: 'gear-tag', text: 'Settings', 'aria-hidden': 'true' });
   const panelBody = el('div', { class: 'panel-body' });
   const tabs = el('nav', { class: 'panel-tabs', 'aria-label': 'Settings and more' });
   const panel = el('aside', { id: 'panel', hidden: true, 'aria-label': 'Settings' },
@@ -96,7 +98,7 @@ window.startSiteEditor = function startSiteEditor(P) {
   const spot = el('div', { id: 'spot-menu', hidden: true, role: 'menu' });
   // "Click to edit", following the pointer over anything that can be edited.
   const hoverTag = el('div', { id: 'hover-tag', hidden: true, text: 'Click to edit', 'aria-hidden': 'true' });
-  document.body.append(frame, gear, panel, publish, spot, hoverTag);
+  document.body.append(frame, gear, gearTag, panel, publish, spot, hoverTag);
 
   // The gear: assets/gear-icon-vector.svg, put straight into the page so it
   // can take the site's colors (the accent color, outlined in the text
@@ -243,7 +245,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     const tagAt = (e) => {
       const t = e.target;
       const over = panel.hidden && t instanceof frameWin.Element && !t.closest('.sfs-editor, .sfs-editing')
-        && (editableAt(t) || t.closest('.read-photo'));
+        && (editableAt(t) || t.closest('.read-photo') || titleSettingAt(t));
       hoverTag.hidden = !over;
       if (over) hoverTag.style.transform = `translate(${e.clientX + 16}px, ${e.clientY + 18}px)`;
     };
@@ -306,15 +308,13 @@ window.startSiteEditor = function startSiteEditor(P) {
       openPanel('photos');
       return;
     }
-    // The title, the line under it and the space round the options (the
-    // options themselves still lead to their sections).
-    if (t.closest('#menu') && !t.closest('#menu nav a, #menu .notice[href]')) {
+    // The title, or the line under it: straight to its settings.
+    const titleSetting = titleSettingAt(t);
+    if (titleSetting) {
       e.preventDefault();
       e.stopPropagation();
-      showSpot(e, [
-        ['Change the menu', () => openPanel('menu')],
-        ['Change the title', () => openPanel('settings', 'MENU_TITLE')],
-      ]);
+      hoverTag.hidden = true;
+      openPanel('settings', titleSetting);
       return;
     }
     // A link to another website opens in a new tab, so the editor stays.
@@ -328,6 +328,14 @@ window.startSiteEditor = function startSiteEditor(P) {
         window.open(url.href, '_blank', 'noopener');
       }
     }
+  }
+
+  // The home screen's title (MENU_TITLE) or the line under it (MENU_SUBTITLE)
+  // under the pointer: the setting it's written in.
+  function titleSettingAt(t) {
+    if (t.closest('#menu h1')) return 'MENU_TITLE';
+    if (t.closest('#menu .subtitle')) return 'MENU_SUBTITLE';
+    return null;
   }
 
   // The words under a click: a section on the home page, or the words of a
@@ -626,7 +634,7 @@ const FRAME_CSS = `
   html.in-site-editor #menu h1,
   html.in-site-editor #menu .subtitle { cursor: pointer; }
   /* Room at the right end of the menu bar for the editor's gear. */
-  html.in-site-editor:not(.phone-menu) #quick-list { padding-right: 76px; }
+  html.in-site-editor:not(.phone-menu) #quick-list { padding-right: 92px; }
 
   .sfs-editor { margin-top: 0.6em; }
   .sfs-hint {

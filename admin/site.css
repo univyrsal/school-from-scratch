@@ -24,11 +24,11 @@ body.site-editor > #settings-bar { display: none !important; }
 
 #gear {
   position: fixed;
-  top: 10px;
-  right: 14px;
+  top: 6px;
+  right: 12px;
   z-index: 5;
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -38,8 +38,7 @@ body.site-editor > #settings-bar { display: none !important; }
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* The picture in assets/gear-icon-vector.svg, in the accent color with a
-   thin outline in the text color. */
+/* The picture in assets/gear-icon-vector.svg, in the accent color. */
 #gear svg {
   display: block;
   width: 100%;
@@ -48,10 +47,7 @@ body.site-editor > #settings-bar { display: none !important; }
 }
 #gear svg path {
   fill: var(--accent);
-  stroke: var(--fg);
-  stroke-width: 1.3px;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
+  stroke: none;
 }
 #gear:hover { transform: rotate(30deg); }
 #gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
@@ -81,7 +77,7 @@ body.panel-open #gear { transform: rotate(60deg); }
   align-items: center;
   gap: 8px;
   /* Room on the right for the gear, which stays put over the panel. */
-  padding: 12px 74px 12px 16px;
+  padding: 12px 88px 12px 16px;
   border-bottom: 1.5px solid var(--line);
 }
 .panel-tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
@@ -123,16 +119,17 @@ body.panel-open #gear { transform: rotate(60deg); }
 
 /* ---- "Click to edit", following the pointer ------------------------------------ */
 
-#hover-tag {
+#hover-tag,
+#gear-tag {
   position: fixed;
   left: 0;
   top: 0;
   z-index: 6;
-  padding: 4px 12px;
+  padding: 7px 18px;
   border-radius: 999px;
   background: var(--accent);
   color: var(--fg);
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -140,6 +137,15 @@ body.panel-open #gear { transform: rotate(60deg); }
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 #hover-tag[hidden] { display: none; }
+/* The gear's name, to its left while the pointer is over it. */
+#gear-tag {
+  left: auto;
+  top: 18px;
+  right: 84px;
+  display: none;
+}
+#gear:hover + #gear-tag { display: block; }
+body.panel-open #gear:hover + #gear-tag { display: none; }
 
 /* ---- Where something was clicked: what can be done with it ------------------ */
 

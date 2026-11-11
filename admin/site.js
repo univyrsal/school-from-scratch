@@ -56,6 +56,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     document.body.classList.toggle('tabs-spread-letters', switchOn('ADMIN_TABS_SPREAD_LETTERS', true));
     document.body.classList.toggle('settings-arrow-animation', switchOn('ADMIN_SETTINGS_ARROW_ANIMATION', false));
     document.body.classList.toggle('switch-animation', switchOn('ADMIN_SWITCH_ANIMATION', false));
+    document.body.classList.toggle('publish-box-animation', switchOn('ADMIN_PUBLISH_BOX_ANIMATION', false));
     // The outline round what can be edited lives in the page in the frame.
     if (frameDoc && frameDoc.documentElement) {
       frameDoc.documentElement.classList.toggle('sfs-outline-fade', switchOn('ADMIN_OUTLINE_FADE', false));

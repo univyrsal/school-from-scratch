@@ -1488,3 +1488,11 @@ change (false):
 ```js
 ADMIN_SWITCH_ANIMATION = false
 ```
+
+The box at the bottom of the screen with See changes, Discard and Save &
+Publish rises smoothly into place when it appears (true), or simply appears
+(false):
+
+```js
+ADMIN_PUBLISH_BOX_ANIMATION = false
+```

@@ -67,17 +67,22 @@ html.phone-menu #menu-button:focus-visible { outline: 2px solid var(--fg); outli
   transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.65, 0, 0.35, 1),
     opacity calc(var(--phone-menu-ms, 350ms) / 2) ease;
 }
-#quick-nav.open #menu-button .menu-line-top { transform: translateY(6px) rotate(45deg); }
-#quick-nav.open #menu-button .menu-line-bottom { transform: translateY(-6px) rotate(-45deg); }
+/* (Read right to left: each outer line first moves to the middle, then
+   turns about the middle, so the two cross exactly at the center.) */
+#quick-nav.open #menu-button .menu-line-top { transform: rotate(45deg) translateY(6px); }
+#quick-nav.open #menu-button .menu-line-bottom { transform: rotate(-45deg) translateY(-6px); }
 #quick-nav.open #menu-button .menu-line-middle { transform: scaleX(0); opacity: 0; }
 
 /* The side menu: full height, from the left edge, the options one under
-   another. */
+   another. It (and the dimmed page beside it) runs on past the bottom of the
+   screen: on iPhones, Safari's toolbar sits over the page, and something
+   that stops at the bottom of the screen stops above the toolbar, leaving a
+   strip of the page showing under it. */
 html.phone-menu #quick-list {
   position: fixed;
   left: 0;
   top: 0;
-  bottom: 0;
+  bottom: calc(-1 * var(--under-toolbar, 200px));
   z-index: 3;
   width: var(--phone-menu-width, 280px);
   max-width: 85vw;
@@ -85,7 +90,9 @@ html.phone-menu #quick-list {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: calc(var(--phone-button-size, 56px) + 12px) 0 24px;
+  /* (The extra room at the bottom keeps the last option clear of the
+     toolbar when the list is long enough to scroll.) */
+  padding: calc(var(--phone-button-size, 56px) + 12px) 0 calc(24px + var(--under-toolbar, 200px) + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-x: hidden;
   overflow-y: auto;
@@ -119,7 +126,7 @@ html.phone-menu #quick-list a::after { display: none; }
 html.phone-menu #menu-scrim {
   display: block;
   position: fixed;
-  inset: 0;
+  inset: 0 0 calc(-1 * var(--under-toolbar, 200px)) 0;
   z-index: 2;
   background: rgba(0, 0, 0, 0.25);
   opacity: 0;

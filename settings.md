@@ -1014,7 +1014,7 @@ ADMIN_LAYOUT = "site"
 Empty ("") follows ACCENT_COLOR.
 
 ```js
-ADMIN_GEAR_COLOR = "#dfeac0"
+ADMIN_GEAR_COLOR = "#000000"
 ```
 
 A thin outline round the gear and its "Settings" label:

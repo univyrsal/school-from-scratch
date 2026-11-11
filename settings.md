@@ -1024,7 +1024,7 @@ A thin outline round the gear and its "Settings" label:
 - `"never"` = no outline.
 
 ```js
-ADMIN_GEAR_OUTLINE = "over the bar"
+ADMIN_GEAR_OUTLINE = "never"
 ```
 
 The gear's panel slides in, or just appears.

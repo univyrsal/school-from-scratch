@@ -25,6 +25,8 @@
 window.startSiteEditor = function startSiteEditor(P) {
   const { $, el, toast } = P;
   document.body.classList.add('site-editor');
+  // The gear's outline, if ADMIN_GEAR_OUTLINE asks for it.
+  document.body.classList.toggle('gear-outline', P.setting('ADMIN_GEAR_OUTLINE', false) === true);
   // The gear lines up with the site's menu bar.
   document.documentElement.style.setProperty('--site-bar-height', Math.max(24, P.setting('TOP_MENU_HEIGHT', 64)) + 'px');
 
@@ -83,11 +85,7 @@ window.startSiteEditor = function startSiteEditor(P) {
   const tabs = el('nav', { class: 'panel-tabs', 'aria-label': 'Settings and more' });
   const panel = el('aside', { id: 'panel', hidden: true, 'aria-label': 'Settings' },
     el('div', { class: 'panel-top' }, tabs),
-    panelBody,
-    el('p', { class: 'panel-foot' },
-      'Prefer the old layout? ',
-      el('a', { href: '?layout=classic', text: 'Open the classic layout' }),
-      ' (for this visit), or set Admin layout to "classic" in Settings to keep it.'));
+    panelBody);
   const publishWhat = el('p', { class: 'publish-what' });
   const publishDetails = el('div', { class: 'publish-details', hidden: true });
   const publishError = el('p', { class: 'publish-error', role: 'alert', hidden: true });

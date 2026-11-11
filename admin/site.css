@@ -38,8 +38,6 @@ body.site-editor > #settings-bar { display: none !important; }
   border-radius: 50%;
   background: none;
   cursor: pointer;
-  /* A soft shadow, so it stands out over photos too. */
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* The picture in assets/gear-icon-vector.svg, in the accent color. */
@@ -52,6 +50,13 @@ body.site-editor > #settings-bar { display: none !important; }
 #gear svg path {
   fill: var(--accent);
   stroke: none;
+}
+/* ADMIN_GEAR_OUTLINE: a thin outline round it in the text color. */
+body.gear-outline #gear svg path {
+  stroke: var(--fg);
+  stroke-width: 1.3px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 #gear:hover { transform: rotate(30deg); }
 #gear:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
@@ -111,15 +116,6 @@ body.panel-open #gear { transform: rotate(60deg); }
   font-size: 17px;
 }
 .panel-body > .section > h2 { margin-top: 0.6em; }
-.panel-foot {
-  margin: 0;
-  padding: 12px 20px;
-  border-top: 1.5px solid var(--line);
-  font-size: 14px;
-  color: var(--quiet);
-  text-align: center;
-}
-.panel-foot a { color: var(--fg); }
 
 /* ---- "Click to edit", following the pointer ------------------------------------ */
 

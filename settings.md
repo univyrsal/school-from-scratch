@@ -1430,3 +1430,11 @@ or /admin/?layout=classic.
 ```js
 ADMIN_LAYOUT = "site"
 ```
+
+The gear in the top-right corner of the admin (in the "site" layout) is in
+the accent color. Give it a thin outline in the text color too (true), so
+it stands out more, or none (false):
+
+```js
+ADMIN_GEAR_OUTLINE = false
+```

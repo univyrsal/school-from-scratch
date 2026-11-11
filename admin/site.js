@@ -25,6 +25,8 @@
 window.startSiteEditor = function startSiteEditor(P) {
   const { $, el, toast } = P;
   document.body.classList.add('site-editor');
+  // The gear lines up with the site's menu bar.
+  document.documentElement.style.setProperty('--site-bar-height', Math.max(24, P.setting('TOP_MENU_HEIGHT', 64)) + 'px');
 
   // ---- What's changed and not saved ----------------------------------------
 
@@ -621,12 +623,12 @@ const FRAME_CSS = `
   html.in-site-editor #sections > section.section:hover,
   html.in-site-editor [data-text-file]:hover,
   html.in-site-editor #pay-content:hover {
-    outline-color: color-mix(in srgb, var(--fg, #000) 35%, transparent);
+    outline-color: #000000;
   }
   html.in-site-editor .sfs-editing,
   html.in-site-editor .sfs-editing:hover {
     cursor: auto;
-    outline: 2px solid var(--fg, #000);
+    outline: 2px solid #000000;
   }
   html.in-site-editor .sfs-hidden { display: none !important; }
   /* The photos and the title can be clicked too. */
@@ -634,7 +636,7 @@ const FRAME_CSS = `
   html.in-site-editor #menu h1,
   html.in-site-editor #menu .subtitle { cursor: pointer; }
   /* Room at the right end of the menu bar for the editor's gear. */
-  html.in-site-editor:not(.phone-menu) #quick-list { padding-right: 92px; }
+  html.in-site-editor:not(.phone-menu) #quick-list { padding-right: 76px; }
 
   .sfs-editor { margin-top: 0.6em; }
   .sfs-hint {

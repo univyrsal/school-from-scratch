@@ -24,11 +24,15 @@ body.site-editor > #settings-bar { display: none !important; }
 
 #gear {
   position: fixed;
-  top: 6px;
-  right: 12px;
+  /* Centered in the site's menu bar (TOP_MENU_HEIGHT), as far from the
+     right edge as from the top. */
+  --gear-size: 52px;
+  --gear-inset: max(6px, (var(--site-bar-height, 64px) - var(--gear-size)) / 2);
+  top: var(--gear-inset);
+  right: var(--gear-inset);
   z-index: 5;
-  width: 60px;
-  height: 60px;
+  width: var(--gear-size);
+  height: var(--gear-size);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -77,7 +81,7 @@ body.panel-open #gear { transform: rotate(60deg); }
   align-items: center;
   gap: 8px;
   /* Room on the right for the gear, which stays put over the panel. */
-  padding: 12px 88px 12px 16px;
+  padding: 12px 76px 12px 16px;
   border-bottom: 1.5px solid var(--line);
 }
 .panel-tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
@@ -140,8 +144,8 @@ body.panel-open #gear { transform: rotate(60deg); }
 /* The gear's name, to its left while the pointer is over it. */
 #gear-tag {
   left: auto;
-  top: 18px;
-  right: 84px;
+  top: calc(var(--site-bar-height, 64px) / 2 - 17px);
+  right: 72px;
   display: none;
 }
 #gear:hover + #gear-tag { display: block; }

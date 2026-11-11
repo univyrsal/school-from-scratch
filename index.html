@@ -732,6 +732,7 @@
   }
   .gallery-off #quick-nav { display: none; }
 </style>
+<link rel="stylesheet" href="phonemenu.css">
 </head>
 <body>
   <div id="viewport">
@@ -759,6 +760,7 @@
   </nav>
 
 <script src="markdown.js"></script>
+<script src="phonemenu.js"></script>
 <script>
 // ---- Settings ---------------------------------------------------------------
 // All tunable values live in settings.md, as `NAME = value` lines inside
@@ -2682,6 +2684,10 @@ function startGallery() {
     copy.append(...barLetters(label));
     return copy;
   }));
+  // On phones the bar becomes a button in the corner and a menu that slides
+  // out from the side (phonemenu.js). Zooming in on a computer doesn't count
+  // as a phone: the page is laid out for the window as it is at 100%.
+  setUpPhoneMenu({ setting, layoutWidth: () => window.innerWidth * browserZoom() });
   let quickShown = false;
   // originX/originY: where the menu's centre is on screen; scale: the zoom.
   function updateQuickNav(originX, originY, scale, W, H) {

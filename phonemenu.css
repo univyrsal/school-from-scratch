@@ -1,0 +1,148 @@
+/* The menu on phones (phonemenu.js): a button in the top-left corner in
+   place of the menu bar, and the bar's options in a menu that slides out
+   from the left. Only while the page has the phone-menu class; otherwise the
+   bar is as it always was. */
+
+#menu-button,
+#menu-scrim { display: none; }
+
+html.phone-menu #quick-nav {
+  /* The bar itself goes; the button and the side menu take its place,
+     above everything else on the page. */
+  z-index: 10;
+  height: 0;
+  background: none;
+  border: 0;
+  transform: none;
+  visibility: visible;
+  transition: none;
+}
+
+/* The button: a square of the accent color with three lines in it. It
+   slides down with the bar's rule (on the home page, once the main menu is
+   off screen; on other pages, straight away). */
+html.phone-menu #menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  width: var(--phone-button-size, 56px);
+  height: var(--phone-button-size, 56px);
+  padding: 0;
+  border: 0;
+  background: var(--phone-menu-bg, var(--accent, #e8f0d4));
+  color: var(--fg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear var(--phone-menu-ms, 350ms);
+}
+html.phone-menu #quick-nav.show #menu-button,
+html.phone-menu #quick-nav.open #menu-button {
+  transform: translateY(0);
+  visibility: visible;
+  transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+html.phone-menu #menu-button:focus-visible { outline: 2px solid var(--fg); outline-offset: -5px; }
+#menu-button svg {
+  width: 60%;
+  height: 60%;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+/* Three lines -> X: the middle one shrinks away while the outer two meet in
+   the middle and cross. Closing plays it backwards. */
+#menu-button .menu-line {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.65, 0, 0.35, 1),
+    opacity calc(var(--phone-menu-ms, 350ms) / 2) ease;
+}
+#quick-nav.open #menu-button .menu-line-top { transform: translateY(6px) rotate(45deg); }
+#quick-nav.open #menu-button .menu-line-bottom { transform: translateY(-6px) rotate(-45deg); }
+#quick-nav.open #menu-button .menu-line-middle { transform: scaleX(0); opacity: 0; }
+
+/* The side menu: full height, from the left edge, the options one under
+   another. */
+html.phone-menu #quick-list {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: var(--phone-menu-width, 280px);
+  max-width: 85vw;
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: calc(var(--phone-button-size, 56px) + 12px) 0 24px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  background: var(--phone-menu-bg, var(--accent, #e8f0d4));
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear var(--phone-menu-ms, 350ms);
+}
+html.phone-menu #quick-nav.open #quick-list {
+  /* --drag: how far it's being pulled back to the left. */
+  transform: translateX(var(--drag, 0px));
+  visibility: visible;
+  transition: transform var(--phone-menu-ms, 350ms) cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+html.phone-menu #quick-nav.dragging #quick-list { transition: none; }
+html.phone-menu #quick-list a {
+  padding: 14px 24px;
+  font-size: var(--phone-menu-text-size, 20px);
+  text-align: left;
+  white-space: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The bar's hover underline is sized for a word in a row; not used here. */
+html.phone-menu #quick-list a::before,
+html.phone-menu #quick-list a::after { display: none; }
+
+/* The rest of the page, dimmed a little while the menu is open. */
+html.phone-menu #menu-scrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  touch-action: none;
+  transition: opacity var(--phone-menu-ms, 350ms) ease, visibility 0s linear var(--phone-menu-ms, 350ms);
+}
+html.phone-menu #quick-nav.open #menu-scrim {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--phone-menu-ms, 350ms) ease, visibility 0s;
+}
+
+/* The play's page: its own menu colors (PLAY_MENU_* in settings.md), with
+   its outline down the menu's edge and round the button. */
+html.phone-menu body.play {
+  --phone-menu-bg: var(--play-menu-bg, #ffffff);
+}
+html.phone-menu body.play #quick-list {
+  border-right: var(--play-menu-outline-thickness, 2px) solid var(--play-menu-outline, #000000);
+}
+html.phone-menu body.play #menu-button {
+  border: var(--play-menu-outline-thickness, 2px) solid var(--play-menu-outline, #000000);
+  border-top: 0;
+  border-left: 0;
+}

@@ -37,6 +37,9 @@ main {
   min-height: 100dvh;
   padding: 48px 16px;
   box-sizing: border-box;
+  /* A word too long for a phone's width (an email address) breaks onto the
+     next line rather than making the whole page wider than the screen. */
+  overflow-wrap: anywhere;
   text-align: center;
 }
 h1 {

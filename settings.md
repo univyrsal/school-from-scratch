@@ -759,6 +759,35 @@ The menu bar's first option, which takes you back to the main menu.
 TOP_MENU_HOME_LABEL = "Home"
 ```
 
+On phones the menu bar is too narrow for its options, so it's replaced by
+a menu button (three lines, in the accent color) in the top-left corner. It
+appears when the bar would. Pressing it slides the options out from the
+left side of the screen and turns the three lines into an X; pressing the X
+closes it. It also closes when dragged back to the left, when the page
+beside it is tapped, or when an option is chosen. It slides as fast as the
+bar (TOP_MENU_SLIDE_MS) and is instant when TOP_MENU_ANIMATION is false.
+On (true), or false to keep the bar on phones too:
+
+```js
+PHONE_MENU = true
+```
+
+Screens narrower than this many pixels get the button instead of the bar.
+Zooming in on a computer doesn't count.
+
+```js
+PHONE_MENU_BELOW_WIDTH = 640
+```
+
+Size of the button (it's square), width of the menu that slides out, and
+the size of the options' text in it, in pixels:
+
+```js
+PHONE_MENU_BUTTON_SIZE = 56
+PHONE_MENU_WIDTH = 280
+PHONE_MENU_TEXT_SIZE = 20
+```
+
 ## Fonts & menu
 
 The big title at the top of the menu.

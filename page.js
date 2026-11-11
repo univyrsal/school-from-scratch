@@ -190,6 +190,9 @@ window.settingsLoaded.then(() => {
         return link;
       }));
     quickList.classList.toggle('underline', setting('TOP_MENU_UNDERLINE_ON_HOVER', true));
+    // On phones: a button in the corner and a menu from the side instead
+    // (phonemenu.js, on the pages that load it).
+    if (typeof setUpPhoneMenu === 'function') setUpPhoneMenu({ setting });
     requestAnimationFrame(() => quickNav.classList.add('show'));
   }
 

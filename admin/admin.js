@@ -532,30 +532,126 @@
     section.addEventListener('settings-changed', updateCounts);
     updateCounts();
 
-    // Searching shows only the settings that match, with their groups open.
+    // Searching shows only the settings that match, best matches first, with
+    // their groups open (see settingsFinder below).
+    const found = el('p', { class: 'search-found', role: 'status' });
+    search.after(found);
+    const find = settingsFinder(groupEls);
+    const blockOrder = new Map(groupEls.map((d) => [d, [...d.querySelectorAll('.settings-block')]]));
     const wasOpen = new Map();
     search.addEventListener('input', () => {
-      const q = search.value.trim().toLowerCase();
+      const q = search.value.trim();
+      const scores = q ? find(q) : null;
       for (const d of groupEls) {
         if (!wasOpen.has(d)) wasOpen.set(d, d.open);
-        let any = false;
-        for (const block of d.querySelectorAll('.settings-block')) {
-          const notes = (block.querySelector('.notes') || { textContent: '' }).textContent.toLowerCase();
-          let blockAny = false;
+        let best = 0;
+        for (const block of blockOrder.get(d)) {
+          let blockBest = 0;
           for (const row of block.querySelectorAll('.setting')) {
-            const hit = !q || row._search.includes(q) || notes.includes(q) || (d._label || '').toLowerCase().includes(q);
-            row.classList.toggle('hidden-by-search', !hit);
-            blockAny = blockAny || hit;
+            const score = scores ? scores.get(row.dataset.name) || 0 : 1;
+            row.classList.toggle('hidden-by-search', score === 0);
+            blockBest = Math.max(blockBest, score);
           }
-          block.classList.toggle('hidden-by-search', !blockAny);
-          any = any || blockAny;
+          block.classList.toggle('hidden-by-search', blockBest === 0);
+          block._score = blockBest;
+          best = Math.max(best, blockBest);
         }
-        d.classList.toggle('hidden-by-search', !any);
-        d.open = q ? any : wasOpen.get(d);
-        if (!q) wasOpen.delete(d);
+        // Within a group, the best-matching settings come first.
+        const blocks = scores ? [...blockOrder.get(d)].sort((a, b) => b._score - a._score) : blockOrder.get(d);
+        d.append(...blocks);
+        d.classList.toggle('hidden-by-search', best === 0);
+        d._score = best;
+        d.open = scores ? best > 0 : wasOpen.get(d);
+        if (!scores) wasOpen.delete(d);
       }
+      // And the best-matching groups come first.
+      const groupsNow = scores ? [...groupEls].sort((a, b) => b._score - a._score) : groupEls;
+      found.after(...groupsNow);
+      const n = scores ? scores.size : 0;
+      found.textContent = !scores ? '' : n ? `${n} setting${n === 1 ? '' : 's'} found, best matches first` : 'No settings match. Try fewer words, or a different word for the same thing.';
     });
     return section;
+  }
+
+  // The settings search. Each setting is looked up by its name (MENU_TITLE
+  // and "Menu title"), its group's heading, the notes written above it, and
+  // its value (a font's name, say), with MiniSearch (vendor/minisearch.js):
+  //   - the words can come in any order, and every word has to be there
+  //     ("menu color" finds settings about both), falling back to any of
+  //     them when nothing has them all;
+  //   - a word can be the start of a longer one ("photo" finds "photos");
+  //   - a small typo is forgiven in words of 4 letters or more ("collor");
+  //   - a match in the name counts most, then the heading, then the notes;
+  //   - a few words mean the same here: colour/color, grey/gray, and
+  //     picture/image/photo.
+  // Without MiniSearch (the file missing), it falls back to finding the
+  // typed words anywhere in the same places.
+  // groupEls: the groups as built above. Returns find(query) -> Map(setting
+  // name -> score) of the settings that match.
+  // (How long things take is in milliseconds, the settings ending in _MS, so
+  // "fast", "slow" and the like find those.)
+  const SEARCH_SAME = {
+    colour: 'color', grey: 'gray', picture: 'photo', image: 'photo', img: 'photo',
+    fast: 'speed', faster: 'speed', slow: 'speed', slower: 'speed', quick: 'speed', quickly: 'speed',
+    duration: 'speed', milliseconds: 'speed', millisecond: 'speed', ms: 'speed',
+  };
+  const SEARCH_SKIP = new Set(['a', 'an', 'the', 'of', 'to', 'in', 'on', 'and', 'or', 'is', 'it', 'for', 'with', 'how', 'what', 'be', 'by', 'at', 'as', 'do', 'does', 'i', 'can', 'where', 'which', 'when', 'my', 'much', 'many']);
+  function settingsFinder(groupEls) {
+    const docs = [];
+    for (const d of groupEls) {
+      for (const block of d.querySelectorAll('.settings-block')) {
+        const notes = (block.querySelector('.notes') || { textContent: '' }).textContent;
+        for (const row of block.querySelectorAll('.setting')) {
+          const name = row.dataset.name;
+          const state = edits.get(name);
+          const v = state ? state.entry.value : '';
+          const value = typeof v === 'string' || typeof v === 'number' ? String(v) : Array.isArray(v) ? v.filter((x) => typeof x === 'string').join(' ') : '';
+          docs.push({ id: name, code: name.replace(/_/g, ' '), nice: niceName(name), heading: d._label || '', notes, value });
+        }
+      }
+    }
+    // Lower case, the little words dropped, a plain "s" ending taken off
+    // ("slides" -> "slide", "photos" -> "photo"), then the words that mean
+    // the same here made one.
+    const processTerm = (term) => {
+      let t = term.toLowerCase();
+      if (SEARCH_SKIP.has(t)) return null;
+      if (t.length > 3 && /[^s]s$/.test(t) && !/(ss|us|is)$/.test(t)) t = t.slice(0, -1);
+      return SEARCH_SAME[t] || t;
+    };
+    if (typeof window.MiniSearch === 'function') {
+      const index = new window.MiniSearch({
+        fields: ['code', 'nice', 'heading', 'notes', 'value'],
+        processTerm,
+        searchOptions: {
+          boost: { code: 4, nice: 3, heading: 1.5, notes: 1, value: 1 },
+          prefix: true,
+          fuzzy: (term) => (term.length >= 4 ? 0.2 : false),
+        },
+      });
+      index.addAll(docs);
+      return (query) => {
+        // A pasted name (MENU_TITLE) is looked for as its words.
+        const q = query.replace(/_/g, ' ');
+        let hits = index.search(q, { combineWith: 'AND' });
+        if (!hits.length) hits = index.search(q, { combineWith: 'OR' });
+        // An exact name goes to the very top.
+        const exact = query.trim().toUpperCase().replace(/\s+/g, '_');
+        return new Map(hits.map((h) => [h.id, h.score * (h.id === exact ? 100 : 1)]));
+      };
+    }
+    // Fallback: every typed word somewhere in the same places.
+    return (query) => {
+      const words = query.toLowerCase().replace(/_/g, ' ').split(/\s+/).map(processTerm).filter(Boolean);
+      const out = new Map();
+      for (const doc of docs) {
+        const name = (doc.code + ' ' + doc.nice).toLowerCase();
+        const rest = (doc.heading + ' ' + doc.notes + ' ' + doc.value).toLowerCase();
+        if (!words.every((w) => name.includes(w) || rest.includes(w))) continue;
+        out.set(doc.id, words.filter((w) => name.includes(w)).length + 1);
+      }
+      return out;
+    };
   }
 
   // One setting: its name, a control that suits its kind, and an Undo.

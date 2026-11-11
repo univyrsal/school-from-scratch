@@ -480,6 +480,9 @@ body {
   font-size: 17px;
 }
 .settings-search:focus { outline: none; border-color: var(--fg); }
+/* How many settings the search found (or that none did). */
+.search-found { margin: -6px 0 14px; font-size: 14px; color: var(--quiet); text-align: center; }
+.search-found:empty { display: none; }
 .settings-group {
   border-top: 1.5px solid var(--line);
 }

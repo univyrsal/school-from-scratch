@@ -25,8 +25,15 @@
 window.startSiteEditor = function startSiteEditor(P) {
   const { $, el, toast } = P;
   document.body.classList.add('site-editor');
-  // The gear's outline, if ADMIN_GEAR_OUTLINE asks for it.
-  document.body.classList.toggle('gear-outline', P.setting('ADMIN_GEAR_OUTLINE', false) === true);
+  // The gear's outline, if ADMIN_GEAR_OUTLINE asks for it: as the switch in
+  // Settings is now (saved or not), so it changes the moment it's flipped.
+  const applyGearOutline = () => {
+    let on = P.setting('ADMIN_GEAR_OUTLINE', false) === true;
+    const row = P.edits.get('ADMIN_GEAR_OUTLINE');
+    if (row) { try { on = row.value() === true; } catch (e) { /* keep the saved one */ } }
+    document.body.classList.toggle('gear-outline', on);
+  };
+  applyGearOutline();
   // The gear lines up with the site's menu bar.
   document.documentElement.style.setProperty('--site-bar-height', Math.max(24, P.setting('TOP_MENU_HEIGHT', 64)) + 'px');
 
@@ -145,6 +152,9 @@ window.startSiteEditor = function startSiteEditor(P) {
   if (kinds.some(([k]) => k === 'settings')) {
     const intro = $('.settings-intro', buildKind('settings'));
     if (intro) intro.textContent = 'Open a group to see its settings. Changed settings are highlighted; nothing is saved until you choose Save & Publish at the bottom of the screen. Close this panel to see the website with your changes first.';
+    // Any setting changing (in the panel, or put back by Discard).
+    buildKind('settings').addEventListener('settings-changed', () => { updatePublish(); applyGearOutline(); });
+    applyGearOutline();
   }
   const tabButtons = new Map(kinds.map(([kind, option]) => [kind,
     el('button', { type: 'button', class: 'panel-tab', text: option.label, onclick: () => openPanel(kind) })]));
@@ -207,7 +217,7 @@ window.startSiteEditor = function startSiteEditor(P) {
     if (found) { e.preventDefault(); openPanel(found[0]); }
     else if (id === 'formatting') { e.preventDefault(); openPanel('key'); }
   });
-  panelBody.addEventListener('settings-changed', () => updatePublish());
+  panelBody.addEventListener('settings-changed', (e) => { if (!built.get('settings') || !built.get('settings').contains(e.target)) updatePublish(); });
 
   // ---- The page in the frame ------------------------------------------------------
 

@@ -1571,9 +1571,18 @@
     const asked = new URLSearchParams(location.search).get('layout');
     const layout = (asked === 'classic' || asked === 'site') ? asked
       : String(setting('ADMIN_LAYOUT', 'site')).trim().toLowerCase();
+    // A message saved just before the admin reloaded itself (after the menu
+    // changed), shown now that it's back (in either layout).
+    const showSavedMessage = () => {
+      try {
+        const after = sessionStorage.getItem('admin-toast');
+        if (after) { sessionStorage.removeItem('admin-toast'); toast(after); }
+      } catch (e) { /* storage blocked: no message, nothing else lost */ }
+    };
     if (layout !== 'classic' && typeof window.startSiteEditor === 'function') {
       status.textContent = '';
       window.startSiteEditor(parts);
+      showSavedMessage();
       return;
     }
     sectionEls = options.map((o) => (o.file === 'settings.md' ? buildSettingsSection(o)
@@ -1582,12 +1591,7 @@
     $('#sections').replaceChildren(buildKey(), ...sectionEls);
     buildMenus();
     status.textContent = '';
-    // A message saved just before the admin reloaded itself (after the menu
-    // changed), shown now that it's back.
-    try {
-      const after = sessionStorage.getItem('admin-toast');
-      if (after) { sessionStorage.removeItem('admin-toast'); toast(after); }
-    } catch (e) { /* storage blocked: no message, nothing else lost */ }
+    showSavedMessage();
     if (location.hash) {
       scrollToHash(false);
       if (document.fonts) document.fonts.ready.then(() => scrollToHash(false));

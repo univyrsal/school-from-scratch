@@ -561,6 +561,12 @@ PHONE_MENU_WIDTH = 280
 PHONE_MENU_TEXT_SIZE = 20
 ```
 
+An option with a hyphen in its name (Parent-Learning) gets a line per word, without the hyphen.
+
+```js
+PHONE_MENU_SPLIT_AT_HYPHENS = true
+```
+
 For testing phones on a computer: every page opens in an iPhone-sized frame, with the phone menu and phone layout. Only on this computer, never on the live site. Then the phone's screen size (390 × 844 is an iPhone 12–14).
 
 ```js

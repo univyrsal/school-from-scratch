@@ -4,7 +4,8 @@
 //
 // Only ever on this computer (localhost, or its address on the home
 // network), never on the live site, so turning it on in settings.md and
-// publishing changes nothing for visitors.
+// publishing changes nothing for visitors. Never on a real phone either, so
+// the site can be checked on one over the home network with this left on.
 //
 // Inside the frame this only hides the scrollbar, since an iPhone's floats
 // over the page instead of taking up room beside it.
@@ -22,6 +23,7 @@
   const host = location.hostname;
   const local = host === 'localhost' || host === '[::1]' || /^(127|10)\./.test(host) || /^192\.168\./.test(host) || host.endsWith('.local');
   if (!local || /^\/admin(\/|$)/.test(location.pathname)) return;
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) return;
   fetch('settings.md', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.text() : ''))
     .then((text) => {

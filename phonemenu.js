@@ -35,6 +35,13 @@ function setUpPhoneMenu({ setting, layoutWidth }) {
   // Same speed as the bar's slide, and switched off along with it.
   root.setProperty('--phone-menu-ms', (setting('TOP_MENU_ANIMATION', true) ? Math.max(0, setting('TOP_MENU_SLIDE_MS', 350)) : 0) + 'ms');
 
+  // An option with a hyphen in its name ("Parent-Learning") gets a line per
+  // word in the side menu, without the hyphen, so spreading its letters on
+  // hover never pushes half of it onto a new line and back.
+  if (setting('PHONE_MENU_SPLIT_AT_HYPHENS', true) === true) {
+    for (const link of list.querySelectorAll('a')) splitAtHyphens(link);
+  }
+
   // The button: three lines that turn into an X while the menu is open.
   const svg = 'http://www.w3.org/2000/svg';
   const button = document.createElement('button');
@@ -81,9 +88,29 @@ function setUpPhoneMenu({ setting, layoutWidth }) {
 
   button.addEventListener('click', () => setOpen(!open));
   scrim.addEventListener('click', () => setOpen(false));
-  // While the menu is open the page behind it stays put.
-  scrim.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
-  scrim.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+  // While the menu is open the page behind it stays put, wherever the finger
+  // (or wheel) is: only the menu scrolls, and only when its options run on
+  // past the bottom of the screen. (The list's overscroll-behavior can't do
+  // this alone: a list short enough to fit has nothing to scroll, so the
+  // browser hands the whole drag to the page.)
+  const menuCanScroll = (target, down) => {
+    if (!list.contains(target)) return false;
+    const room = list.scrollHeight - list.clientHeight;
+    return room > 1 && (down ? list.scrollTop < room - 1 : list.scrollTop > 0);
+  };
+  let touchY = 0;
+  nav.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+  nav.addEventListener('touchmove', (e) => {
+    if (!open || e.touches.length !== 1) return;
+    const y = e.touches[0].clientY;
+    // (A finger moving up scrolls down.)
+    const down = y < touchY;
+    touchY = y;
+    if (e.cancelable && !menuCanScroll(e.target, down)) e.preventDefault();
+  }, { passive: false });
+  nav.addEventListener('wheel', (e) => {
+    if (open && !e.ctrlKey && !menuCanScroll(e.target, e.deltaY > 0)) e.preventDefault();
+  }, { passive: false });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && open) { setOpen(false); button.focus(); }
   });
@@ -143,4 +170,39 @@ function setUpPhoneMenu({ setting, layoutWidth }) {
   // An option is a link, which a mouse would otherwise pick up and carry
   // off instead of dragging the menu.
   list.addEventListener('dragstart', (e) => { if (html.classList.contains('phone-menu')) e.preventDefault(); });
+}
+
+// "Parent-Learning" -> a line for "Parent" and one for "Learning", with the
+// hyphen kept between them but hidden in the side menu (phonemenu.css), so
+// the bar on a wider screen still shows the name whole. Works on the home
+// page's options, whose letters each sit in a box of their own, and on the
+// other pages', which are plain text.
+function splitAtHyphens(link) {
+  const name = link.textContent;
+  const words = name.split('-');
+  if (words.length < 2 || words.some((word) => !word.trim())) return;
+  const pieces = link.children.length
+    ? [...link.childNodes]
+    : [...name].map((ch) => document.createTextNode(ch));
+  if (!link.hasAttribute('aria-label')) link.setAttribute('aria-label', name);
+  const parts = [];
+  let line = null;
+  for (const piece of pieces) {
+    if (piece.textContent === '-') {
+      const hyphen = document.createElement('span');
+      hyphen.className = 'phone-hyphen';
+      hyphen.append(piece);
+      parts.push(hyphen);
+      line = null;
+      continue;
+    }
+    if (!line) {
+      line = document.createElement('span');
+      line.className = 'phone-line';
+      parts.push(line);
+    }
+    line.append(piece);
+  }
+  link.replaceChildren(...parts);
+  link.normalize();
 }

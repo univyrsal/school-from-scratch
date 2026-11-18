@@ -1,4 +1,4 @@
-## Alexis 
+## Alexis Yost 
 
 Founding Parent and Teacher, The School From Scratch
 

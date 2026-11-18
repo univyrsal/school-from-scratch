@@ -1,5 +1,6 @@
 ## Alexis Yost 
-![Headshot of Alexis](assets/alexis_headshot.jpeg)
+![Alexis](assets/alexis.jpg)
+
 Founding Parent and Teacher, The School From Scratch
 
 Alexis was born in upstate NY and homeschooled k-12. She has always been attuned to different approaches of education because she sees the need, and value, of stepping outside the standard formula of education. When faced with sending her own children to school she realized that traditional systems left them with more frustrations. Because of this her work has included finding alternative ways of what education could look like for all learners. Student led education has continued to call to her family as a way to push education forward while providing relevant learning for all ages.

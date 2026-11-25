@@ -1,10 +1,8 @@
-## Gopal Krishnamurthy, PhD
-![Headshot of Gopal](assets/gopal_headshot.jpeg)
-Founding Director/Teacher, TEC, and Director/Teacher, The School From Scratch.
+## Alexis Yost 
+![Alexis](assets/alexis.jpg)
+Founding Parent and Teacher, The School From Scratch
 
-Gopal brings decades of experience in schools, universities, teacher education, and education in India, the UK, and the US. He has a PhD in education, and served as university Dept. Chair \& faculty, school director, and teacher. He sees Ojai as a crucible for wonder, not knowing, and deep inquiry.
-
-For more information, read his [Antioch biography](https://www.antioch.edu/faculty/gopal-krishnamurthy/).
+Alexis was born in upstate NY and homeschooled k-12. She has always been attuned to different approaches of education because she sees the need, and value, of stepping outside the standard formula of education. When faced with sending her own children to school she realized that traditional systems left them with more frustrations. Because of this her work has included finding alternatives for what education could look like for all learners. Student led education continues to call to her family to push education forward while developing relevant learning for all ages.
 
 ## Sunsong (Susan) Clark
 ![Headshot of Sunsong](assets/sunsong_headshot.jpeg)
@@ -31,7 +29,15 @@ It has become clear to me that there is no shortcut to true learning. A newborn 
 
 I firmly believe that ‘The School From Scratch' can provide a space where a child’s originality is protected, allowing their uniqueness to naturally blossom.
 
-## Maxwell Lommel
-Web Design, TEC, and Founding Student-Intern, Teaching Apprentice, The School From Scratch.
+## Gopal Krishnamurthy, PhD
+![Headshot of Gopal](assets/gopal_headshot.jpeg)
+Founding Director/Teacher, TEC, and Director/Teacher, The School From Scratch.
 
-Maxwell has explored the educational landscape in different ways in and out of Ojai including attending both traditional and alternative school systems, and was selected to join the Education Reimagined Conference in Washington DC. He is a junior in high school currently taking classes at Ventura College as a dual enrollment student. Maxwell hopes to continue growing at The School From Scratch as the first teacher apprentice/student intern.
+Gopal brings decades of experience in schools, universities, teacher education, and education in India, the UK, and the US. He has a PhD in education, and served as university Dept. Chair \& faculty, school director, and teacher. He sees Ojai as a crucible for wonder, not knowing, and deep inquiry.
+
+For more information, read his [Antioch biography](https://www.antioch.edu/faculty/gopal-krishnamurthy/).
+
+## Maxwell Lommel
+Web Design, TEC, and Founding Student-Intern, The School From Scratch.
+
+Maxwell has explored the educational landscape in different ways in and out of Ojai including attending both traditional and alternative school systems, and was selected to join the Education Reimagined Conference in Washington DC. He is a junior in high school currently taking classes at Ventura College as a dual enrollment student. Maxwell hopes to continue growing at The School From Scratch as the first student intern.
